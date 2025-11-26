@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -13,10 +13,12 @@
             --text: #2d3436;
         }
 
+
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
+
 
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -29,6 +31,7 @@
             flex-direction: column;
             color: var(--text);
         }
+
 
         /* --- 頁面切換控制 --- */
         .screen {
@@ -46,6 +49,7 @@
             display: flex;
         }
 
+
         /* --- 1. 地圖頁面樣式 --- */
         #map-screen {
             align-items: center;
@@ -53,12 +57,14 @@
             padding: 20px;
         }
 
+
         .map-header {
             text-align: center;
             margin-bottom: 30px;
         }
         .map-header h1 { font-size: 1.8rem; margin: 10px 0; color: var(--primary); }
         .map-header p { color: #888; font-size: 0.9rem; }
+
 
         .level-path {
             display: flex;
@@ -68,6 +74,7 @@
             width: 100%;
             padding-bottom: 50px;
         }
+
 
         .level-node {
             width: 70px;
@@ -86,16 +93,19 @@
             transition: transform 0.1s;
         }
 
+
         .level-node.unlocked {
             background: var(--secondary);
             box-shadow: 0 4px 0 #3b9e96;
         }
+
 
         .level-node.current {
             background: var(--primary);
             box-shadow: 0 4px 0 #c0392b;
             animation: pulse 1.5s infinite;
         }
+
 
         .level-node::after {
             content: '';
@@ -121,10 +131,12 @@
             white-space: nowrap;
         }
 
+
         /* --- 2. 遊戲頁面樣式 --- */
         #game-screen {
             justify-content: flex-start;
         }
+
 
         .game-header {
             display: flex;
@@ -136,6 +148,7 @@
             z-index: 10;
         }
 
+
         .stat-box {
             display: flex;
             align-items: center;
@@ -143,6 +156,7 @@
             font-size: 1.1rem;
         }
         .stat-icon { margin-right: 5px; font-size: 1.2rem; }
+
 
         .game-board-container {
             flex: 1;
@@ -154,12 +168,14 @@
             overflow: hidden;
         }
 
+
         .grid {
             display: grid;
             gap: 2px;
             position: relative;
             /* 由 JS 動態計算 columns */
         }
+
 
         .tile {
             background: white;
@@ -174,6 +190,7 @@
             user-select: none;
         }
 
+
         .tile.selected {
             background: #ffeaa7;
             transform: scale(0.9);
@@ -185,10 +202,12 @@
             animation: shake 0.3s;
         }
 
+
         .tile.empty {
             opacity: 0;
             pointer-events: none;
         }
+
 
         #svg-layer {
             position: absolute;
@@ -206,12 +225,14 @@
             fill: none;
         }
 
+
         .game-footer {
             padding: 15px;
             display: flex;
             justify-content: space-around;
             background: white;
         }
+
 
         .btn {
             background: #eee;
@@ -235,6 +256,7 @@
             transform: none;
         }
 
+
         /* --- 彈窗 (勝利/失敗/排行榜) --- */
         .modal-overlay {
             position: absolute;
@@ -255,13 +277,16 @@
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
+
     </style>
 </head>
 <body>
+
 
     <div id="map-screen" class="screen active">
         <div class="map-header">
@@ -275,6 +300,7 @@
         </div>
     </div>
 
+
     <div id="game-screen" class="screen">
         <div class="game-header">
             <div class="stat-box" style="color: #e74c3c;">
@@ -285,17 +311,20 @@
             </div>
         </div>
 
+
         <div class="game-board-container" id="board-container">
             <svg id="svg-layer"></svg>
             <div class="grid" id="grid">
                 </div>
         </div>
 
+
         <div class="game-footer">
             <button class="btn" onclick="exitGame()">退出</button>
             <button class="btn btn-primary" id="btn-shuffle" onclick="shuffleGame()">🔀 洗牌</button>
         </div>
     </div>
+
 
     <div class="modal-overlay" id="result-modal">
         <div class="modal">
@@ -304,6 +333,7 @@
             <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">確定</button>
         </div>
     </div>
+
 
     <script>
         // --- 遊戲設定與資料 ---
@@ -317,12 +347,14 @@
             { id: 5, r: 12, c: 6, types: 16 },// 6x12 = 72格 (挑戰)
         ];
 
+
         const iconsAll = ['🍎','🍌','🍇','🍉','🍒','🍓','🍍','🥝','🥑','🍆','🌽','🥕','🍄','🥜','🍪','🍩','🍔','🍕'];
         
         let userData = {
             unlockedLevel: 1,
             scores: {} // { 1: 20, 2: 45 } (levelId: seconds)
         };
+
 
         // 遊戲狀態
         let currentLevelConfig = null;
@@ -338,6 +370,7 @@
         // 新增：洗牌次數控制
         let shufflesLeft = 1;
 
+
         // --- 初始化系統 ---
         
         function loadData() {
@@ -348,9 +381,11 @@
             renderMap();
         }
 
+
         function saveData() {
             localStorage.setItem('onet_mobile_data', JSON.stringify(userData));
         }
+
 
         function clearData() {
             if(confirm("確定要刪除所有進度嗎？")){
@@ -359,11 +394,14 @@
             }
         }
 
+
         // --- 地圖介面 ---
+
 
         function renderMap() {
             const container = document.getElementById('level-container');
             container.innerHTML = '';
+
 
             levels.forEach(level => {
                 const node = document.createElement('div');
@@ -389,15 +427,19 @@
                     node.style.color = "#aaa";
                 }
 
+
                 if (level.id === userData.unlockedLevel) {
                     node.classList.add('current');
                 }
+
 
                 container.appendChild(node);
             });
         }
 
+
         // --- 遊戲邏輯 ---
+
 
         function startGame(levelConfig) {
             currentLevelConfig = levelConfig;
@@ -418,8 +460,10 @@
             updateStatus();
             updateShuffleBtn(); // 更新洗牌按鈕狀態
 
+
             // 生成地圖
             initBoard(levelConfig);
+
 
             // 啟動計時
             if (timerInterval) clearInterval(timerInterval);
@@ -429,12 +473,14 @@
             }, 1000);
         }
 
+
         function exitGame() {
             clearInterval(timerInterval);
             document.getElementById('game-screen').classList.remove('active');
             document.getElementById('map-screen').classList.add('active');
             renderMap(); // 重新渲染以更新任何變動
         }
+
 
         function updateStatus() {
             document.getElementById('lives-display').innerText = lives;
@@ -455,6 +501,7 @@
             }
         }
 
+
         function initBoard(config) {
             const innerRows = config.r;
             const innerCols = config.c;
@@ -462,6 +509,7 @@
             const cols = innerCols + 2;
             const totalPairs = (innerRows * innerCols) / 2;
             pairsLeft = totalPairs;
+
 
             // 1. 選圖案
             let usedIcons = iconsAll.slice(0, config.types);
@@ -471,6 +519,7 @@
                 deck.push(icon, icon);
             }
             deck.sort(() => Math.random() - 0.5);
+
 
             // 2. 建立網格資料 (padding = null)
             grid = [];
@@ -486,14 +535,17 @@
                 grid.push(row);
             }
 
+
             // 3. 渲染 DOM
             renderGridDOM(rows, cols);
         }
+
 
         function renderGridDOM(rows, cols) {
             const gridEl = document.getElementById('grid');
             gridEl.innerHTML = '';
             tilesDOM = [];
+
 
             // 計算合適的方塊大小
             // 寬度限制：螢幕寬度減去 padding (約 20px)
@@ -505,8 +557,10 @@
             
             const tileSize = Math.min(maxTileW, maxTileH, 60); // 最大不超過 60px
 
+
             gridEl.style.gridTemplateColumns = `repeat(${cols}, ${tileSize}px)`;
             gridEl.style.fontSize = `${tileSize * 0.6}px`; // 圖案隨方塊縮放
+
 
             for (let r = 0; r < rows; r++) {
                 let rowTiles = [];
@@ -529,13 +583,16 @@
                 tilesDOM.push(rowTiles);
             }
         }
+
 
         // --- 核心邏輯 ---
 
+
         function handleInput(r, c) {
             if (isProcessing || grid[r][c] === null) return;
             
             const currentTile = tilesDOM[r][c];
+
 
             // 第一次點選
             if (!selected) {
@@ -544,12 +601,14 @@
                 return;
             }
 
+
             // 點同一個 -> 取消
             if (selected.r === r && selected.c === c) {
                 selected = null;
                 currentTile.classList.remove('selected');
                 return;
             }
+
 
             // 第二次點選 -> 開始比對
             const prevTile = tilesDOM[selected.r][selected.c];
@@ -559,6 +618,7 @@
                 handleMistake(prevTile, currentTile);
                 return;
             }
+
 
             // 2. 圖案相同，檢查路徑
             const path = findPath(selected.r, selected.c, r, c);
@@ -577,24 +637,29 @@
                     prevTile.innerText = '';
                     prevTile.onclick = null;
 
+
                     currentTile.classList.add('empty');
                     currentTile.innerText = '';
                     currentTile.onclick = null;
 
+
                     selected = null;
                     isProcessing = false;
                     pairsLeft--;
+
 
                     if (pairsLeft === 0) {
                         gameWin();
                     }
                 }, 300);
 
+
             } else {
                 // 路徑不通
                 handleMistake(prevTile, currentTile);
             }
         }
+
 
         function handleMistake(tile1, tile2) {
             isProcessing = true;
@@ -604,493 +669,6 @@
             lives--;
             updateStatus();
 
-            setTimeout(() => {
-                tile1.classList.remove('selected', 'error');
-                tile2.classList.remove('error');
-                selected = null;
-                isProcessing = false;
-
-                if (lives <= 0) {
-                    gameOver();
-                }
-            }, 500);
-        }
-
-        // --- 路徑演算法 ---
-        function findPath(r1, c1, r2, c2) {
-            // 直線
-            if (checkLine(r1, c1, r2, c2)) return [{r:r1, c:c1}, {r:r2, c:c2}];
-            // 1轉
-            if (grid[r1][c2] === null && checkLine(r1, c1, r1, c2) && checkLine(r1, c2, r2, c2)) return [{r:r1, c:c1}, {r:r1, c:c2}, {r:r2, c:c2}];
-            if (grid[r2][c1] === null && checkLine(r1, c1, r2, c1) && checkLine(r2, c1, r2, c2)) return [{r:r1, c:c1}, {r:r2, c:c1}, {r:r2, c:c2}];
-            // 2轉
-            const rows = grid.length;
-            const cols = grid[0].length;
-            for (let k = 0; k < cols; k++) {
-                if (grid[r1][k] === null && checkLine(r1, c1, r1, k) && checkLine(r1, k, r2, k) && checkLine(r2, k, r2, c2) && grid[r2][k] === null) {
-                    return [{r:r1, c:c1}, {r:r1, c:k}, {r:r2, c:k}, {r:r2, c:c2}];
-                }
-            }
-            for (let k = 0; k < rows; k++) {
-                if (grid[k][c1] === null && checkLine(r1, c1, k, c1) && checkLine(k, c1, k, c2) && checkLine(k, c2, r2, c2) && grid[k][c2] === null) {
-                    return [{r:r1, c:c1}, {r:k, c:c1}, {r:k, c:c2}, {r:r2, c:c2}];
-                }
-                     color: #666;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            white-space: nowrap;
-        }
-
-        /* --- 2. 遊戲頁面樣式 --- */
-        #game-screen {
-            justify-content: flex-start;
-        }
-
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            z-index: 10;
-        }
-
-        .stat-box {
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        .stat-icon { margin-right: 5px; font-size: 1.2rem; }
-
-        .game-board-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            padding: 10px;
-            overflow: hidden;
-        }
-
-        .grid {
-            display: grid;
-            gap: 2px;
-            position: relative;
-            /* 由 JS 動態計算 columns */
-        }
-
-        .tile {
-            background: white;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem; /* 會被 JS 調整 */
-            box-shadow: 0 2px 0 #e0e0e0;
-            cursor: pointer;
-            transition: transform 0.1s, background-color 0.1s;
-            user-select: none;
-        }
-
-        .tile.selected {
-            background: #ffeaa7;
-            transform: scale(0.9);
-            box-shadow: inset 0 0 0 2px #fdcb6e;
-        }
-        
-        .tile.error {
-            background: #ffcccc;
-            animation: shake 0.3s;
-        }
-
-        .tile.empty {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #svg-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 20;
-        }
-        .path-line {
-            stroke: var(--primary);
-            stroke-width: 4;
-            stroke-linecap: round;
-            fill: none;
-        }
-
-        .game-footer {
-            padding: 15px;
-            display: flex;
-            justify-content: space-around;
-            background: white;
-        }
-
-        .btn {
-            background: #eee;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: #555;
-            cursor: pointer;
-        }
-        .btn:active { transform: scale(0.95); }
-        .btn-primary { background: var(--primary); color: white; }
-
-        /* --- 彈窗 (勝利/失敗/排行榜) --- */
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal {
-            background: white;
-            width: 80%;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-    </style>
-</head>
-<body>
-
-    <div id="map-screen" class="screen active">
-        <div class="map-header">
-            <h1>🗺️ 冒險地圖</h1>
-            <p>點選關卡開始挑戰</p>
-        </div>
-        <div class="level-path" id="level-container">
-            </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <button class="btn" onclick="clearData()">⚠️ 清除紀錄</button>
-        </div>
-    </div>
-
-    <div id="game-screen" class="screen">
-        <div class="game-header">
-            <div class="stat-box" style="color: #e74c3c;">
-                <span class="stat-icon">❤️</span> <span id="lives-display">3</span>
-            </div>
-            <div class="stat-box" style="color: #2980b9;">
-                <span class="stat-icon">⏱️</span> <span id="time-display">0</span>s
-            </div>
-        </div>
-
-        <div class="game-board-container" id="board-container">
-            <svg id="svg-layer"></svg>
-            <div class="grid" id="grid">
-                </div>
-        </div>
-
-        <div class="game-footer">
-            <button class="btn" onclick="exitGame()">退出</button>
-            <button class="btn btn-primary" onclick="shuffleGame()">🔀 洗牌</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="result-modal">
-        <div class="modal">
-            <h2 id="modal-title">TITLE</h2>
-            <p id="modal-msg">Message</p>
-            <button class="btn btn-primary" id="modal-btn" onclick="closeModal()">確定</button>
-        </div>
-    </div>
-
-    <script>
-        // --- 遊戲設定與資料 ---
-        // 定義關卡：rows(直), cols(橫), iconTypes(圖案多樣性)
-        // 手機版：rows 應大於 cols
-        const levels = [
-            { id: 1, r: 6, c: 4, types: 6 },  // 4x6 = 24格 (簡單)
-            { id: 2, r: 8, c: 5, types: 10 }, // 5x8 = 40格
-            { id: 3, r: 9, c: 6, types: 12 }, // 6x9 = 54格
-            { id: 4, r: 10, c: 6, types: 15 },// 6x10 = 60格 (變難)
-            { id: 5, r: 12, c: 6, types: 16 },// 6x12 = 72格 (挑戰)
-        ];
-
-        const iconsAll = ['🍎','🍌','🍇','🍉','🍒','🍓','🍍','🥝','🥑','🍆','🌽','🥕','🍄','🥜','🍪','🍩','🍔','🍕'];
-        
-        let userData = {
-            unlockedLevel: 1,
-            scores: {} // { 1: 20, 2: 45 } (levelId: seconds)
-        };
-
-        // 遊戲狀態
-        let currentLevelConfig = null;
-        let grid = [];
-        let tilesDOM = [];
-        let selected = null;
-        let lives = 3;
-        let time = 0;
-        let timerInterval;
-        let pairsLeft = 0;
-        let isProcessing = false;
-
-        // --- 初始化系統 ---
-        
-        function loadData() {
-            const saved = localStorage.getItem('onet_mobile_data');
-            if (saved) {
-                userData = JSON.parse(saved);
-            }
-            renderMap();
-        }
-
-        function saveData() {
-            localStorage.setItem('onet_mobile_data', JSON.stringify(userData));
-        }
-
-        function clearData() {
-            if(confirm("確定要刪除所有進度嗎？")){
-                localStorage.removeItem('onet_mobile_data');
-                location.reload();
-            }
-        }
-
-        // --- 地圖介面 ---
-
-        function renderMap() {
-            const container = document.getElementById('level-container');
-            container.innerHTML = '';
-
-            levels.forEach(level => {
-                const node = document.createElement('div');
-                node.classList.add('level-node');
-                
-                // 狀態判斷
-                if (level.id <= userData.unlockedLevel) {
-                    node.classList.add('unlocked');
-                    node.onclick = () => startGame(level);
-                    node.innerText = level.id;
-                    
-                    // 如果這關有玩過，顯示紀錄
-                    if (userData.scores[level.id]) {
-                        const scoreTag = document.createElement('div');
-                        scoreTag.classList.add('best-score');
-                        scoreTag.innerText = `👑 ${userData.scores[level.id]}s`;
-                        node.appendChild(scoreTag);
-                    }
-                } else {
-                    node.innerText = "🔒";
-                    node.style.cursor = "default";
-                    node.style.background = "#ddd";
-                    node.style.color = "#aaa";
-                }
-
-                if (level.id === userData.unlockedLevel) {
-                    node.classList.add('current');
-                }
-
-                container.appendChild(node);
-            });
-        }
-
-        // --- 遊戲邏輯 ---
-
-        function startGame(levelConfig) {
-            currentLevelConfig = levelConfig;
-            
-            // 切換畫面
-            document.getElementById('map-screen').classList.remove('active');
-            document.getElementById('game-screen').classList.add('active');
-            
-            // 重置數據
-            lives = 3;
-            time = 0;
-            selected = null;
-            isProcessing = false;
-            updateStatus();
-
-            // 生成地圖
-            initBoard(levelConfig);
-
-            // 啟動計時
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                time++;
-                document.getElementById('time-display').innerText = time;
-            }, 1000);
-        }
-
-        function exitGame() {
-            clearInterval(timerInterval);
-            document.getElementById('game-screen').classList.remove('active');
-            document.getElementById('map-screen').classList.add('active');
-            renderMap(); // 重新渲染以更新任何變動
-        }
-
-        function updateStatus() {
-            document.getElementById('lives-display').innerText = lives;
-            document.getElementById('time-display').innerText = time;
-        }
-
-        function initBoard(config) {
-            const innerRows = config.r;
-            const innerCols = config.c;
-            const rows = innerRows + 2; // 加邊框
-            const cols = innerCols + 2;
-            const totalPairs = (innerRows * innerCols) / 2;
-            pairsLeft = totalPairs;
-
-            // 1. 選圖案
-            let usedIcons = iconsAll.slice(0, config.types);
-            let deck = [];
-            for (let i = 0; i < totalPairs; i++) {
-                const icon = usedIcons[i % usedIcons.length];
-                deck.push(icon, icon);
-            }
-            deck.sort(() => Math.random() - 0.5);
-
-            // 2. 建立網格資料 (padding = null)
-            grid = [];
-            for (let r = 0; r < rows; r++) {
-                let row = [];
-                for (let c = 0; c < cols; c++) {
-                    if (r === 0 || r === rows - 1 || c === 0 || c === cols - 1) {
-                        row.push(null);
-                    } else {
-                        row.push(deck.pop());
-                    }
-                }
-                grid.push(row);
-            }
-
-            // 3. 渲染 DOM
-            renderGridDOM(rows, cols);
-        }
-
-        function renderGridDOM(rows, cols) {
-            const gridEl = document.getElementById('grid');
-            gridEl.innerHTML = '';
-            tilesDOM = [];
-
-            // 計算合適的方塊大小
-            // 寬度限制：螢幕寬度減去 padding (約 20px)
-            const screenW = window.innerWidth - 20;
-            const maxTileW = Math.floor(screenW / cols);
-            // 高度限制：螢幕高度減去 header/footer (約 150px) 除以 rows
-            const screenH = window.innerHeight - 150;
-            const maxTileH = Math.floor(screenH / rows);
-            
-            const tileSize = Math.min(maxTileW, maxTileH, 60); // 最大不超過 60px
-
-            gridEl.style.gridTemplateColumns = `repeat(${cols}, ${tileSize}px)`;
-            gridEl.style.fontSize = `${tileSize * 0.6}px`; // 圖案隨方塊縮放
-
-            for (let r = 0; r < rows; r++) {
-                let rowTiles = [];
-                for (let c = 0; c < cols; c++) {
-                    const tile = document.createElement('div');
-                    tile.classList.add('tile');
-                    tile.style.width = `${tileSize}px`;
-                    tile.style.height = `${tileSize}px`;
-                    
-                    if (grid[r][c] === null) {
-                        tile.classList.add('empty');
-                    } else {
-                        tile.innerText = grid[r][c];
-                        tile.onclick = () => handleInput(r, c);
-                    }
-                    
-                    gridEl.appendChild(tile);
-                    rowTiles.push(tile);
-                }
-                tilesDOM.push(rowTiles);
-            }
-        }
-
-        // --- 核心邏輯 (與之前類似，但加入錯誤判定) ---
-
-        function handleInput(r, c) {
-            if (isProcessing || grid[r][c] === null) return;
-            
-            const currentTile = tilesDOM[r][c];
-
-            // 第一次點選
-            if (!selected) {
-                selected = {r, c};
-                currentTile.classList.add('selected');
-                return;
-            }
-
-            // 點同一個 -> 取消
-            if (selected.r === r && selected.c === c) {
-                selected = null;
-                currentTile.classList.remove('selected');
-                return;
-            }
-
-            // 第二次點選 -> 開始比對
-            const prevTile = tilesDOM[selected.r][selected.c];
-            
-            // 1. 圖案不同
-            if (grid[selected.r][selected.c] !== grid[r][c]) {
-                handleMistake(prevTile, currentTile);
-                return;
-            }
-
-            // 2. 圖案相同，檢查路徑
-            const path = findPath(selected.r, selected.c, r, c);
-            if (path) {
-                // 配對成功
-                isProcessing = true;
-                drawPath(path);
-                
-                // 延遲消除
-                setTimeout(() => {
-                    grid[selected.r][selected.c] = null;
-                    grid[r][c] = null;
-                    
-                    prevTile.classList.remove('selected');
-                    prevTile.classList.add('empty');
-                    prevTile.innerText = '';
-                    prevTile.onclick = null;
-
-                    currentTile.classList.add('empty');
-                    currentTile.innerText = '';
-                    currentTile.onclick = null;
-
-                    selected = null;
-                    isProcessing = false;
-                    pairsLeft--;
-
-                    if (pairsLeft === 0) {
-                        gameWin();
-                    }
-                }, 300);
-
-            } else {
-                // 路徑不通
-                handleMistake(prevTile, currentTile);
-            }
-        }
-
-        function handleMistake(tile1, tile2) {
-            isProcessing = true;
-            tile2.classList.add('error'); // 紅色震動
-            tile1.classList.add('error');
-            
-            lives--;
-            updateStatus();
 
             setTimeout(() => {
                 tile1.classList.remove('selected', 'error');
@@ -1098,13 +676,15 @@
                 selected = null;
                 isProcessing = false;
 
+
                 if (lives <= 0) {
                     gameOver();
                 }
             }, 500);
         }
 
-        // --- 路徑演算法 (保持不變) ---
+
+       // --- 路徑演算法 ---
         function findPath(r1, c1, r2, c2) {
             // 直線
             if (checkLine(r1, c1, r2, c2)) return [{r:r1, c:c1}, {r:r2, c:c2}];
@@ -1127,6 +707,7 @@
             return null;
         }
 
+
         function checkLine(r1, c1, r2, c2) {
             if (r1 === r2) {
                 for (let c = Math.min(c1, c2) + 1; c < Math.max(c1, c2); c++) if (grid[r1][c] !== null) return false;
@@ -1137,6 +718,7 @@
             }
             return false;
         }
+
 
         // --- 繪圖輔助 ---
         function drawPath(points) {
@@ -1156,26 +738,35 @@
                 d += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
             });
 
+
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", d);
             path.classList.add("path-line");
             svg.appendChild(path);
 
+
             setTimeout(() => svg.innerHTML = '', 300);
         }
 
+
+        // 修改：洗牌邏輯
         function shuffleGame() {
+            // 如果次數用完，直接返回
+            if (shufflesLeft <= 0) return;
+
+
             let currentIcons = [];
             const rows = grid.length;
             const cols = grid[0].length;
             
+            // 收集剩餘圖案
             for(let r=1; r<rows-1; r++) {
                 for(let c=1; c<cols-1; c++) {
                     if(grid[r][c] !== null) currentIcons.push(grid[r][c]);
                 }
             }
             currentIcons.sort(() => Math.random() - 0.5);
-            
+// 重新填入
             let idx = 0;
             for(let r=1; r<rows-1; r++) {
                 for(let c=1; c<cols-1; c++) {
@@ -1187,8 +778,14 @@
                     }
                 }
             }
-            selected = null;
+            selected = null; // 取消當前選取
+
+
+            // 扣除次數並更新 UI
+            shufflesLeft--;
+            updateShuffleBtn();
         }
+
 
         // --- 結算流程 ---
         const modalEl = document.getElementById('result-modal');
@@ -1196,16 +793,23 @@
         const modalMsg = document.getElementById('modal-msg');
         const modalBtn = document.getElementById('modal-btn');
 
+
+        function closeModal() {
+            modalEl.style.display = 'none';
+        }
+
+
         function showModal(title, msg, btnText, callback) {
             modalTitle.innerText = title;
             modalMsg.innerText = msg;
             modalBtn.innerText = btnText;
             modalBtn.onclick = () => {
-                modalEl.style.display = 'none';
+                closeModal();
                 if(callback) callback();
             };
             modalEl.style.display = 'flex';
         }
+
 
         function gameWin() {
             clearInterval(timerInterval);
@@ -1218,11 +822,13 @@
                 isNewRecord = true;
             }
 
+
             // 解鎖下一關
             if (lvl === userData.unlockedLevel && lvl < levels.length) {
                 userData.unlockedLevel++;
             }
             saveData();
+
 
             let msg = `耗時：${time}秒`;
             if (isNewRecord) msg += "\n🏆 刷新紀錄！";
@@ -1232,6 +838,7 @@
             });
         }
 
+
         function gameOver() {
             clearInterval(timerInterval);
             showModal("💔 挑戰失敗", "愛心用光了，再接再厲！", "重試", () => {
@@ -1239,10 +846,11 @@
             });
         }
 
+
         // 啟動
         loadData();
+
 
     </script>
 </body>
 </html>
-
