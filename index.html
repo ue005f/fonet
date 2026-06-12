@@ -403,7 +403,7 @@ document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'
 document.getElementById(pageId).classList.add('active');
 
 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-document.querySelector([data-page="${pageId}"]`).classList.add('active');
+document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
 
 // 切換頁面時自動把 Header 降下來
 mainHeader.classList.remove('header-hidden');
