@@ -412,9 +412,7 @@ window.scrollTo(0, 0);
 
 function switchMatchTab(tabType) {
 currentMatchTab = tabType;
-document.querySelectorAll('.tab-btn').forEach(b 
-
-=> b.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 if(tabType === 'major') {
 document.querySelectorAll('.tab-btn')[0].classList.add('active');
 document.getElementById('major-filter-bar').style.display = 'flex';
