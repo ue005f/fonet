@@ -457,7 +457,7 @@ document.getElementById('loading-screen').innerHTML = "❌ 串接失敗，請檢
 });
 
 function fetchTabJSON(tabName) {
-const url = https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)};
+const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
 return fetch(url).then(res => res.text());
 }
 
