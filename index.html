@@ -3,1101 +3,760 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>台灣格鬥遊戲社群大廳</title>
+<title>台灣格鬥遊戲</title>
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --bg-card: #12121a;
-    --bg-card2: #1a1a26;
-    --accent: #e8433a;
-    --accent2: #ff6b35;
-    --gold: #f5a623;
-    --text: #f0eee8;
-    --text-muted: #9896a0;
-    --text-dim: #5a5870;
-    --border: rgba(255,255,255,0.07);
-    --border-hover: rgba(255,255,255,0.15);
-    --live: #22c55e;
-    --radius: 10px;
-    --radius-lg: 16px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  /* ── HEADER / LOGO ── */
-  #site-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(10,10,15,0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    will-change: transform;
-  }
-
-  #site-header.hidden {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-
-  .header-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-  }
-
-  .logo-mark {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 900;
-    color: #fff;
-    letter-spacing: -1px;
-  }
-
-  .logo-text {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: 0.02em;
-  }
-
-  .logo-text span {
-    color: var(--accent);
-  }
-
-  nav {
-    display: flex;
-    gap: 4px;
-  }
-
-  nav a {
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 14px;
-    padding: 6px 14px;
-    border-radius: 6px;
-    transition: color 0.2s, background 0.2s;
-  }
-
-  nav a:hover, nav a.active {
-    color: var(--text);
-    background: var(--bg-card2);
-  }
-
-  nav a.active {
-    color: var(--accent);
-  }
-
-  /* ── MAIN LAYOUT ── */
-  main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 32px 24px 80px;
-  }
-
-  /* ── SECTION HEADERS ── */
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-
-  .section-title {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .section-title::before {
-    content: '';
-    display: block;
-    width: 3px;
-    height: 14px;
-    background: var(--accent);
-    border-radius: 2px;
-  }
-
-  .more-link {
-    font-size: 12px;
-    color: var(--text-dim);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: color 0.2s;
-  }
-
-  .more-link:hover { color: var(--text-muted); }
-
-  /* ── STREAM SECTION ── */
-  .stream-section {
-    margin-bottom: 40px;
-  }
-
-  .stream-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  @media (max-width: 700px) {
-    .stream-grid { grid-template-columns: 1fr; }
-  }
-
-  .stream-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    transition: border-color 0.2s, transform 0.15s;
-  }
-
-  .stream-card:hover {
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
-  }
-
-  .stream-card.featured {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  @media (max-width: 700px) {
-    .stream-card.featured { grid-template-columns: 1fr; }
-  }
-
-  .stream-thumb {
-    aspect-ratio: 16/9;
-    background: var(--bg-card2);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stream-card.featured .stream-thumb {
-    aspect-ratio: auto;
-    min-height: 200px;
-  }
-
-  .stream-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .stream-thumb-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #1e1e2e;
-    color: var(--text-dim);
-    font-size: 28px;
-  }
-
-  .live-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-  }
-
-  .viewer-badge {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.7);
-    color: #fff;
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .viewer-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--live);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .stream-info {
-    padding: 14px 16px;
-  }
-
-  .stream-card.featured .stream-info {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .stream-platform {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .platform-twitch { color: #9146ff; }
-  .platform-youtube { color: #ff0000; }
-
-  .stream-name {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .stream-card.featured .stream-name { font-size: 22px; margin-bottom: 8px; }
-
-  .stream-game {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-
-  .stream-title {
-    font-size: 12px;
-    color: var(--text-dim);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .stream-card.featured .stream-title {
-    font-size: 14px;
-    color: var(--text-muted);
-    white-space: normal;
-    line-height: 1.5;
-    margin-bottom: 16px;
-  }
-
-  .watch-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 6px;
-    text-decoration: none;
-    width: fit-content;
-    transition: background 0.2s;
-  }
-
-  .watch-btn:hover { background: var(--accent2); }
-
-  .offline-label {
-    font-size: 12px;
-    color: var(--text-dim);
-    font-style: italic;
-  }
-
-  /* ── BANNER CAROUSEL ── */
-  .banner-section { margin-bottom: 40px; }
-
-  .banner-carousel {
-    position: relative;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    aspect-ratio: 21/6;
-    background: var(--bg-card2);
-    cursor: pointer;
-  }
-
-  @media (max-width: 600px) { .banner-carousel { aspect-ratio: 16/7; } }
-
-  .banner-slide {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-    display: flex;
-    align-items: center;
-    padding: 32px 40px;
-    text-decoration: none;
-  }
-
-  .banner-slide.active { opacity: 1; }
-
-  .banner-slide img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .banner-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
-  }
-
-  .banner-content {
-    position: relative;
-    z-index: 1;
-    max-width: 60%;
-  }
-
-  .banner-tag {
-    display: inline-block;
-    background: var(--accent);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-  }
-
-  .banner-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1.3;
-  }
-
-  @media (max-width: 600px) { .banner-title { font-size: 16px; } }
-
-  .banner-dots {
-    position: absolute;
-    bottom: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 6px;
-    z-index: 2;
-  }
-
-  .banner-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.35);
-    cursor: pointer;
-    transition: background 0.2s, width 0.2s;
-    border: none;
-  }
-
-  .banner-dot.active {
-    background: #fff;
-    width: 20px;
-    border-radius: 3px;
-  }
-
-  .banner-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
-    background: var(--bg-card2);
-    color: var(--text-dim);
-    font-size: 14px;
-  }
-
-  /* ── MATCH CARDS ── */
-  .matches-section { margin-bottom: 40px; }
-
-  .matches-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 14px;
-  }
-
-  .match-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 18px 20px;
-    cursor: pointer;
-    transition: border-color 0.2s, transform 0.15s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .match-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: var(--accent);
-    border-radius: 3px 0 0 3px;
-  }
-
-  .match-card.ongoing::before { background: var(--live); }
-
-  .match-card:hover {
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
-  }
-
-  .match-card.expanded { border-color: var(--border-hover); }
-
-  .match-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-
-  .match-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    flex-shrink: 0;
-  }
-
-  .match-status.live {
-    color: var(--live);
-  }
-
-  .match-status.live .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--live);
-    animation: pulse 2s infinite;
-  }
-
-  .match-title {
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.4;
-    flex: 1;
-  }
-
-  .match-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-  }
-
-  .match-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .match-meta-item svg {
-    width: 13px;
-    height: 13px;
-    opacity: 0.6;
-    flex-shrink: 0;
-  }
-
-  .match-games {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-
-  .game-tag {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.03em;
-  }
-
-  .game-sf6 { background: rgba(232,67,58,0.15); color: #e8433a; }
-  .game-t8 { background: rgba(245,166,35,0.15); color: #f5a623; }
-  .game-ggst { background: rgba(100,149,237,0.15); color: #6495ed; }
-  .game-fatcow { background: rgba(34,197,94,0.15); color: #22c55e; }
-  .game-default { background: rgba(255,255,255,0.07); color: var(--text-muted); }
-
-  .match-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .startgg-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #ff6b35;
-    text-decoration: none;
-    padding: 5px 10px;
-    border: 1px solid rgba(255,107,53,0.3);
-    border-radius: 5px;
-    transition: background 0.2s, border-color 0.2s;
-  }
-
-  .startgg-link:hover {
-    background: rgba(255,107,53,0.1);
-    border-color: rgba(255,107,53,0.6);
-  }
-
-  .expand-btn {
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 6px;
-    border-radius: 4px;
-    transition: color 0.2s, background 0.2s;
-  }
-
-  .expand-btn:hover { color: var(--text); background: var(--bg-card2); }
-
-  .expand-btn svg {
-    width: 14px;
-    height: 14px;
-    transition: transform 0.2s;
-  }
-
-  .expand-btn.open svg { transform: rotate(180deg); }
-
-  .match-detail {
-    display: none;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-    margin-top: 12px;
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    white-space: pre-wrap;
-  }
-
-  .match-card.expanded .match-detail { display: block; }
-
-  /* ── LOADING / ERROR ── */
-  .loading-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 20px;
-    color: var(--text-dim);
-    font-size: 13px;
-  }
-
-  .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .empty-state {
-    padding: 32px 20px;
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 13px;
-  }
-
-  /* ── SKELETON ── */
-  .skeleton {
-    background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card2) 50%, var(--bg-card) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 4px;
-  }
-
-  @keyframes shimmer { to { background-position: -200% 0; } }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 600px) {
-    main { padding: 20px 16px 60px; }
-    .header-inner { padding: 0 16px; }
-    nav a { font-size: 12px; padding: 5px 10px; }
-    .matches-grid { grid-template-columns: 1fr; }
-  }
+:root {
+  --bg:        #0d0d12;
+  --bg-card:   #14141d;
+  --bg-card2:  #1c1c28;
+  --bg-tab:    #1c1c28;
+  --accent:    #e8433a;
+  --accent2:   #ff6b35;
+  --live:      #22c55e;
+  --text:      #eeecf0;
+  --text-sub:  #8e8c9a;
+  --text-dim:  #4e4c5c;
+  --border:    rgba(255,255,255,0.07);
+  --border-hi: rgba(255,255,255,0.14);
+  --r:         12px;
+  --r-sm:      8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  line-height: 1.6;
+  /* space for bottom nav */
+  padding-bottom: 72px;
+}
+
+/* ─── HEADROOM HEADER ─── */
+#hdr {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(13,13,18,0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: transform .28s ease;
+}
+#hdr.hide { transform: translateY(-100%); }
+
+.hdr-inner {
+  max-width: 680px; margin: 0 auto;
+  padding: 0 18px; height: 54px;
+  display: flex; align-items: center;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 9px;
+  text-decoration: none; color: inherit;
+}
+.logo-mark {
+  width: 32px; height: 32px; border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900; color: #fff;
+}
+.logo-name { font-size: 16px; font-weight: 700; letter-spacing: .02em; }
+.logo-name em { font-style: normal; color: var(--accent); }
+
+/* ─── BOTTOM NAV ─── */
+#bnav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(13,13,18,0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-around;
+}
+.bnav-btn {
+  flex: 1; height: 100%; border: none; background: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; cursor: pointer; color: var(--text-dim);
+  transition: color .15s;
+}
+.bnav-btn.active { color: var(--accent); }
+.bnav-btn svg { width: 22px; height: 22px; }
+
+/* ─── SCROLL AREA ─── */
+main {
+  max-width: 680px; margin: 0 auto;
+  padding: 20px 16px 20px;
+  display: flex; flex-direction: column; gap: 32px;
+}
+
+/* ─── SECTION LABEL ─── */
+.sec-label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--text-sub);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px;
+}
+.sec-label::before {
+  content: ''; display: block; width: 3px; height: 13px;
+  background: var(--accent); border-radius: 2px;
+  flex-shrink: 0;
+}
+.sec-label.live-label::before { background: var(--live); }
+
+.sec-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.more-btn {
+  font-size: 11px; color: var(--text-dim); text-decoration: none;
+  display: flex; align-items: center; gap: 3px;
+  transition: color .15s;
+}
+.more-btn:hover { color: var(--text-sub); }
+
+/* ─── LIVE SECTION ─── */
+#live-section { display: none; }
+
+/* Tab bar */
+.tab-bar {
+  display: flex; gap: 4px;
+  background: var(--bg-card2); border-radius: var(--r-sm);
+  padding: 3px; margin-bottom: 14px;
+}
+.tab-btn {
+  flex: 1; padding: 7px 0; border: none; cursor: pointer;
+  background: none; border-radius: 6px;
+  font-size: 12px; font-weight: 600; color: var(--text-dim);
+  transition: background .15s, color .15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.tab-btn.active {
+  background: var(--bg-card);
+  color: var(--text);
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--live); flex-shrink: 0;
+  animation: blink 1.8s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+/* Stream cards */
+.stream-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.stream-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden;
+  display: flex; text-decoration: none; color: inherit;
+  transition: border-color .18s, transform .15s;
+  cursor: pointer;
+}
+.stream-card:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+
+.stream-card.featured { flex-direction: column; }
+
+/* featured = 上圖下文 */
+.stream-thumb {
+  position: relative; background: var(--bg-card2);
+  overflow: hidden; flex-shrink: 0;
+}
+.stream-card.featured .stream-thumb {
+  width: 100%; aspect-ratio: 16/9;
+}
+.stream-card:not(.featured) .stream-thumb {
+  width: 120px; height: 68px;
+}
+.stream-thumb img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.thumb-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 24px;
+}
+.stream-card:not(.featured) .thumb-placeholder { font-size: 18px; }
+
+.platform-pill {
+  position: absolute; top: 8px; left: 8px;
+  font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 4px;
+}
+.platform-twitch { background: #9146ff22; color: #bf94ff; border: 1px solid #9146ff44; }
+.platform-youtube { background: #ff000022; color: #ff8080; border: 1px solid #ff000044; }
+
+.stream-info {
+  padding: 12px 14px; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.stream-card.featured .stream-info { padding: 14px 16px; }
+
+.stream-name { font-size: 15px; font-weight: 600; }
+.stream-card.featured .stream-name { font-size: 17px; }
+
+.stream-game { font-size: 12px; color: var(--text-sub); }
+.stream-title { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.goto-link {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 10px;
+  background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 6px;
+  text-decoration: none; width: fit-content; transition: background .15s;
+}
+.goto-link:hover { background: var(--accent2); }
+
+/* ─── BANNER CAROUSEL ─── */
+.carousel-wrap {
+  border-radius: var(--r); overflow: hidden;
+  position: relative; aspect-ratio: 2/1;
+  background: var(--bg-card2);
+  cursor: pointer;
+}
+.carousel-wrap.tall { aspect-ratio: 16/7; }
+
+.c-slide {
+  position: absolute; inset: 0;
+  opacity: 0; transition: opacity .55s ease;
+  display: flex; align-items: flex-end;
+  text-decoration: none; color: inherit;
+}
+.c-slide.on { opacity: 1; }
+
+.c-slide img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.c-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.75) 0%, rgba(0,0,0,.15) 55%, transparent 100%);
+}
+.c-text {
+  position: relative; z-index: 1;
+  padding: 14px 16px; width: 100%;
+}
+.c-tag {
+  display: inline-block; background: var(--accent); color: #fff;
+  font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 3px; margin-bottom: 5px;
+}
+.c-title { font-size: 15px; font-weight: 700; line-height: 1.3; color: #fff; }
+
+.c-dots {
+  position: absolute; bottom: 10px; right: 12px; z-index: 2;
+  display: flex; gap: 5px;
+}
+.c-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,.3); border: none; cursor: pointer;
+  transition: background .2s, width .2s;
+}
+.c-dot.on { background: #fff; width: 14px; border-radius: 3px; }
+
+.carousel-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 13px; gap: 8px;
+}
+
+/* ─── MATCH CARDS ─── */
+.match-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 18px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+  transition: border-color .18s, transform .15s;
+}
+.match-card::after {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent); border-radius: 3px 0 0 3px;
+}
+.match-card.ongoing::after { background: var(--live); }
+.match-card:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+
+.match-card + .match-card { margin-top: 10px; }
+
+.match-chips {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;
+}
+.chip {
+  font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 4px;
+}
+.chip-live  { background: rgba(34,197,94,.15); color: var(--live); }
+.chip-region { background: rgba(255,255,255,.06); color: var(--text-sub); }
+
+.match-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; line-height: 1.35; }
+
+.match-meta {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  font-size: 11px; color: var(--text-sub); margin-bottom: 10px;
+}
+.mm-item { display: flex; align-items: center; gap: 4px; }
+.mm-item svg { width: 12px; height: 12px; opacity: .55; flex-shrink: 0; }
+
+.game-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.gtag {
+  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+}
+.g-sf6  { background: rgba(232,67,58,.15);   color: #e8433a; }
+.g-t8   { background: rgba(245,166,35,.15);  color: #f5a623; }
+.g-gg   { background: rgba(100,149,237,.15); color: #6495ed; }
+.g-ff   { background: rgba(34,197,94,.15);   color: #22c55e; }
+.g-misc { background: rgba(255,255,255,.07); color: var(--text-sub); }
+
+.match-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px;
+}
+
+.sg-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: var(--accent2);
+  text-decoration: none; padding: 5px 10px;
+  border: 1px solid rgba(255,107,53,.3); border-radius: 5px;
+  transition: background .15s, border-color .15s;
+}
+.sg-link:hover { background: rgba(255,107,53,.1); border-color: rgba(255,107,53,.6); }
+
+.expand-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 11px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 3px;
+  padding: 4px 6px; border-radius: 4px;
+  transition: color .15s, background .15s;
+}
+.expand-btn:hover { color: var(--text-sub); background: var(--bg-card2); }
+.expand-btn svg { width: 13px; height: 13px; transition: transform .2s; }
+.expand-btn.open svg { transform: rotate(180deg); }
+
+.match-detail {
+  display: none; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--text-sub); line-height: 1.75;
+  white-space: pre-wrap;
+}
+.match-card.expanded .match-detail { display: block; }
+
+/* ─── STATES ─── */
+.empty { padding: 28px 0; text-align: center; font-size: 13px; color: var(--text-dim); }
+.loading { display: flex; align-items: center; gap: 10px; padding: 24px 0; font-size: 13px; color: var(--text-dim); }
+.spin {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  animation: rot .7s linear infinite; flex-shrink: 0;
+}
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 400px) {
+  main { padding: 16px 12px 16px; gap: 24px; }
+  .match-title { font-size: 15px; }
+}
 </style>
 </head>
 <body>
 
-<header id="site-header">
-  <div class="header-inner">
-    <a href="#" class="logo">
+<!-- HEADER -->
+<header id="hdr">
+  <div class="hdr-inner">
+    <a class="logo" href="#">
       <div class="logo-mark">拳</div>
-      <div class="logo-text">台灣<span>格鬥</span></div>
+      <div class="logo-name">台灣<em>格鬥</em></div>
     </a>
-    <nav>
-      <a href="#" class="active">首頁</a>
-      <a href="#">實況列表</a>
-      <a href="#">賽事列表</a>
-    </nav>
   </div>
 </header>
 
 <main>
 
-  <!-- ── STREAM SECTION ── -->
-  <section class="stream-section">
-    <div class="section-header">
-      <div class="section-title">直播中</div>
-      <a href="#" class="more-link">更多實況 →</a>
+  <!-- ① 觀賽直播（只在有進行中賽事時顯示） -->
+  <section id="live-section">
+    <div class="sec-row">
+      <div class="sec-label live-label">觀賽直播</div>
     </div>
-    <div id="stream-container">
-      <div class="loading-row"><div class="spinner"></div>載入直播資訊中…</div>
+
+    <!-- 頁籤 -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="cowatch" onclick="switchTab('cowatch')">
+        <span class="live-dot"></span>觀賽直播
+      </button>
+      <button class="tab-btn" data-tab="official" onclick="switchTab('official')">
+        賽事主台
+      </button>
     </div>
+
+    <div id="cowatch-panel" class="stream-grid"></div>
+    <div id="official-panel" class="stream-grid" style="display:none"></div>
   </section>
 
-  <!-- ── BANNER CAROUSEL ── -->
-  <section class="banner-section">
-    <div id="banner-container">
-      <div class="banner-carousel">
-        <div class="banner-placeholder">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-          載入橫幅中…
-        </div>
+  <!-- ② 橫幅輪播 -->
+  <section id="banner-section">
+    <div class="carousel-wrap tall" id="carousel">
+      <div class="carousel-placeholder">
+        <div class="spin"></div>載入中…
       </div>
     </div>
   </section>
 
-  <!-- ── ONGOING MATCHES ── -->
-  <section class="matches-section">
-    <div class="section-header">
-      <div class="section-title" style="--accent:#22c55e">
-        <span style="--accent:#22c55e">現正進行中</span>
-      </div>
-    </div>
-    <div id="ongoing-container">
-      <div class="loading-row"><div class="spinner"></div>載入賽事中…</div>
-    </div>
+  <!-- ③ 現正進行中 -->
+  <section id="ongoing-section">
+    <div class="sec-label live-label">現正進行中</div>
+    <div id="ongoing-list"><div class="loading"><div class="spin"></div>載入賽事…</div></div>
   </section>
 
-  <!-- ── UPCOMING MATCHES ── -->
-  <section class="matches-section">
-    <div class="section-header">
-      <div class="section-title">近期賽事</div>
-      <a href="#" class="more-link">完整賽程 →</a>
+  <!-- ④ 近期賽事 -->
+  <section id="upcoming-section">
+    <div class="sec-row">
+      <div class="sec-label">近期賽事</div>
+      <a class="more-btn" href="#">完整賽程 →</a>
     </div>
-    <div id="upcoming-container">
-      <div class="loading-row"><div class="spinner"></div>載入賽事中…</div>
-    </div>
+    <div id="upcoming-list"><div class="loading"><div class="spin"></div>載入賽事…</div></div>
   </section>
 
 </main>
 
+<!-- BOTTOM NAV -->
+<nav id="bnav">
+  <!-- 實況 -->
+  <button class="bnav-btn" onclick="navTo('streams')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="2"/>
+      <path d="M16.24 7.76a6 6 0 0 1 0 8.49"/>
+      <path d="M7.76 7.76a6 6 0 0 0 0 8.49"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      <path d="M4.93 4.93a10 10 0 0 0 0 14.14"/>
+    </svg>
+  </button>
+  <!-- 首頁 -->
+  <button class="bnav-btn active" onclick="navTo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
+      <path d="M9 21V12h6v9"/>
+    </svg>
+  </button>
+  <!-- 賽事 -->
+  <button class="bnav-btn" onclick="navTo('events')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  </button>
+</nav>
+
 <script>
-// ── CONFIG ──────────────────────────────────────────────
+// ── CONFIG ──────────────────────────────
 const SHEET_ID = '1MBU9FQYsPqEwSgdAjmfxzOETK8vmBPY_JeNkP6vNgCw';
 
-// 格鬥遊戲關鍵字（自動辨別用，Twitch API 串接後才用到）
-const FGC_GAMES = [
-  'Street Fighter 6','SF6','Tekken 8','Tekken8','Guilty Gear',
-  'Fatal Fury','King of Fighters','KOF','Mortal Kombat','Under Night',
-  'Granblue Fantasy Versus','Strive','GBVSR','Dragon Ball FighterZ'
-];
-
-// 遊戲 tag 顏色
 const GAME_CLASS = {
-  'SF6':'game-sf6','Street Fighter 6':'game-sf6',
-  '鐵拳8':'game-t8','Tekken 8':'game-t8','T8':'game-t8',
-  'GGST':'game-ggst','Guilty Gear':'game-ggst','Strive':'game-ggst',
-  'FATCOW':'game-fatcow','Fatal Fury':'game-fatcow',
+  'SF6':'g-sf6','Street Fighter 6':'g-sf6','快打旋風6':'g-sf6','快打6':'g-sf6',
+  '鐵拳8':'g-t8','Tekken 8':'g-t8','T8':'g-t8',
+  'GGST':'g-gg','Guilty Gear':'g-gg','Strive':'g-gg','罪惡裝備':'g-gg',
+  'Fatal Fury':'g-ff','FATCOW':'g-ff','CotW':'g-ff','餓狼傳說':'g-ff',
 };
 
-// ── UTILITIES ──────────────────────────────────────────
-async function fetchSheet(sheetName) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text.slice(47, -2));
-  const cols = json.table.cols.map(c => c.label);
-  return json.table.rows.map(row => {
+// ── HEADROOM ────────────────────────────
+let lastY = 0;
+window.addEventListener('scroll', () => {
+  const hdr = document.getElementById('hdr');
+  const y = window.scrollY;
+  hdr.classList.toggle('hide', y > lastY && y > 80);
+  lastY = y;
+}, { passive: true });
+
+// ── SHEET FETCH ─────────────────────────
+async function fetchSheet(name) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+  const r = await fetch(url);
+  const t = await r.text();
+  const json = JSON.parse(t.slice(47, -2));
+  const cols = json.table.cols.map(c => c.label.trim());
+  return (json.table.rows || []).map(row => {
     const obj = {};
     row.c.forEach((cell, i) => {
-      obj[cols[i]] = cell ? (cell.f || cell.v) : null;
+      if (!cols[i]) return;
+      obj[cols[i]] = cell ? (cell.f !== undefined ? cell.f : cell.v) : null;
     });
     return obj;
-  });
+  }).filter(r => Object.values(r).some(v => v !== null));
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d)) return dateStr;
+// ── DATE HELPERS ────────────────────────
+function parseDate(v) {
+  if (!v) return null;
+  // Google Sheets gviz returns dates as "Date(YYYY,M,D,H,mm,ss)" — M is 0-indexed
+  const m = String(v).match(/Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)/);
+  if (m) {
+    return new Date(+m[1], +m[2], +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+  }
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+
+function fmtDate(v) {
+  const d = parseDate(v);
+  if (!d) return String(v || '');
   return d.toLocaleString('zh-TW', {
     timeZone: 'Asia/Taipei',
     month: 'numeric', day: 'numeric',
     hour: '2-digit', minute: '2-digit'
-  }) + ' (台灣)';
+  });
 }
 
 function isOngoing(row) {
-  if (row.is_active === false || row.is_active === 'FALSE') return false;
+  if (String(row.is_active).toUpperCase() === 'FALSE') return false;
   const now = new Date();
-  const start = row.start_time ? new Date(row.start_time) : null;
-  const end = row.end_time ? new Date(row.end_time) : null;
-  if (start && end) return now >= start && now <= end;
+  const s = parseDate(row.start_time);
+  const e = parseDate(row.end_time);
+  if (s && e) return now >= s && now <= e;
   return false;
 }
 
 function isUpcoming(row) {
-  if (row.is_active === false || row.is_active === 'FALSE') return false;
+  if (String(row.is_active).toUpperCase() === 'FALSE') return false;
   const now = new Date();
-  const start = row.start_time ? new Date(row.start_time) : null;
-  const end = row.end_time ? new Date(row.end_time) : null;
-  const month = new Date(now); month.setDate(now.getDate() + 31);
-  if (end && new Date(end) < now) return false;
-  if (start) return start > now && start <= month;
+  const horizon = new Date(now); horizon.setDate(now.getDate() + 31);
+  const s = parseDate(row.start_time);
+  const e = parseDate(row.end_time);
+  if (e && e < now) return false;
+  if (s) return s > now && s <= horizon;
   return false;
 }
 
-function gameTags(gameStr) {
-  if (!gameStr) return '';
-  return gameStr.split(',').map(g => {
-    g = g.trim();
-    const cls = GAME_CLASS[g] || 'game-default';
-    return `<span class="game-tag ${cls}">${g}</span>`;
+// ── GAME TAGS ───────────────────────────
+function gameTags(str) {
+  if (!str) return '';
+  return str.split(',').map(g => {
+    g = g.trim(); if (!g) return '';
+    const cls = GAME_CLASS[g] || 'g-misc';
+    return `<span class="gtag ${cls}">${g}</span>`;
   }).join('');
 }
 
-function matchCard(row, isLive = false) {
-  const card = document.createElement('div');
-  card.className = 'match-card' + (isLive ? ' ongoing' : '');
+// ── MATCH CARD ──────────────────────────
+const SVG_CAL = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><line x1="5" y1="1.5" x2="5" y2="4.5"/><line x1="11" y1="1.5" x2="11" y2="4.5"/><line x1="2" y1="7" x2="14" y2="7"/></svg>`;
+const SVG_PIN = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5s4.5-5 4.5-8.5c0-2.5-2-4.5-4.5-4.5z"/><circle cx="8" cy="6" r="1.5"/></svg>`;
+const SVG_CHV = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4,6 8,10 12,6"/></svg>`;
 
-  const startFmt = formatDate(row.start_time);
-  const endFmt = formatDate(row.end_time);
-  const dateText = startFmt ? (endFmt ? `${startFmt} ～ ${endFmt}` : startFmt) : '';
+function buildMatchCard(row, live = false) {
+  const div = document.createElement('div');
+  div.className = 'match-card' + (live ? ' ongoing' : '');
 
-  const startggBtn = row.startgg
-    ? `<a href="${row.startgg}" target="_blank" class="startgg-link" onclick="event.stopPropagation()">
-        <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12"><circle cx="8" cy="8" r="7"/><text x="8" y="12" text-anchor="middle" fill="white" font-size="9" font-weight="bold">sg</text></svg>
-        Start.gg 報名
-       </a>`
+  const sDate = fmtDate(row.start_time);
+  const eDate = fmtDate(row.end_time);
+  const dateStr = sDate ? (eDate && eDate !== sDate ? `${sDate} ～ ${eDate}` : sDate) : '';
+
+  const chips = [
+    live ? '<span class="chip chip-live">進行中</span>' : '',
+    row.region_type ? `<span class="chip chip-region">${row.region_type}</span>` : '',
+  ].filter(Boolean).join('');
+
+  const meta = [
+    dateStr ? `<span class="mm-item">${SVG_CAL}${dateStr} (台灣時間)</span>` : '',
+    row.location ? `<span class="mm-item">${SVG_PIN}${row.location}</span>` : '',
+  ].filter(Boolean).join('');
+
+  const tags = row.game ? `<div class="game-tags">${gameTags(row.game)}</div>` : '';
+
+  const sgBtn = row.startgg
+    ? `<a class="sg-link" href="${row.startgg}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ Start.gg</a>`
     : '<span></span>';
 
-  const expandBtn = row.description
-    ? `<button class="expand-btn" aria-label="顯示詳細" onclick="toggleDetail(this, event)">
-        詳細
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="4,6 8,10 12,6"/>
-        </svg>
-       </button>`
-    : '';
+  const expBtn = row.description
+    ? `<button class="expand-btn" onclick="toggleDetail(this,event)">詳細 ${SVG_CHV}</button>`
+    : '<span></span>';
 
   const detail = row.description
-    ? `<div class="match-detail">${row.description}</div>`
-    : '';
+    ? `<div class="match-detail">${row.description}</div>` : '';
 
-  card.innerHTML = `
-    <div class="match-top">
-      <div class="match-status ${isLive ? 'live' : ''}">
-        ${isLive ? '<span class="status-dot"></span>進行中' : ''}
-        ${!isLive && row.region_type ? `<span>${row.region_type}</span>` : ''}
-      </div>
-    </div>
-    <div class="match-title">${row.title || '未命名賽事'}</div>
-    <div class="match-meta">
-      ${dateText ? `<span class="match-meta-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="2" y="3" width="12" height="11" rx="1.5"/>
-          <line x1="5" y1="1.5" x2="5" y2="4.5"/>
-          <line x1="11" y1="1.5" x2="11" y2="4.5"/>
-          <line x1="2" y1="7" x2="14" y2="7"/>
-        </svg>
-        ${dateText}
-      </span>` : ''}
-      ${row.location ? `<span class="match-meta-item">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5s4.5-5 4.5-8.5c0-2.5-2-4.5-4.5-4.5z"/>
-          <circle cx="8" cy="6" r="1.5"/>
-        </svg>
-        ${row.location}
-      </span>` : ''}
-    </div>
-    ${row.game ? `<div class="match-games">${gameTags(row.game)}</div>` : ''}
-    <div class="match-footer">
-      ${startggBtn}
-      ${expandBtn}
-    </div>
+  div.innerHTML = `
+    ${chips ? `<div class="match-chips">${chips}</div>` : ''}
+    <div class="match-title">${row.title || '（未命名賽事）'}</div>
+    ${meta ? `<div class="match-meta">${meta}</div>` : ''}
+    ${tags}
+    <div class="match-foot">${sgBtn}${expBtn}</div>
     ${detail}
   `;
 
   if (row.description) {
-    card.addEventListener('click', () => {
-      card.classList.toggle('expanded');
-      const btn = card.querySelector('.expand-btn');
+    div.addEventListener('click', () => {
+      div.classList.toggle('expanded');
+      const btn = div.querySelector('.expand-btn');
       if (btn) btn.classList.toggle('open');
     });
   }
-
-  return card;
+  return div;
 }
 
-function toggleDetail(btn, e) {
+window.toggleDetail = function(btn, e) {
   e.stopPropagation();
   const card = btn.closest('.match-card');
   card.classList.toggle('expanded');
   btn.classList.toggle('open');
+};
+
+// ── RENDER MATCHES ──────────────────────
+function renderMatches(rows) {
+  const ongoing  = rows.filter(isOngoing);
+  const upcoming = rows.filter(isUpcoming)
+    .sort((a,b) => (parseDate(a.start_time)||0) - (parseDate(b.start_time)||0));
+
+  const ogEl = document.getElementById('ongoing-list');
+  const upEl = document.getElementById('upcoming-list');
+
+  ogEl.innerHTML = '';
+  if (!ongoing.length) {
+    ogEl.innerHTML = '<div class="empty">目前沒有進行中的賽事</div>';
+    document.getElementById('ongoing-section').style.display = 'none';
+  } else {
+    ongoing.forEach(r => ogEl.appendChild(buildMatchCard(r, true)));
+  }
+
+  upEl.innerHTML = '';
+  if (!upcoming.length) {
+    upEl.innerHTML = '<div class="empty">近一個月暫無預定賽事</div>';
+  } else {
+    upcoming.forEach(r => upEl.appendChild(buildMatchCard(r, false)));
+  }
+
+  return { ongoing };
 }
 
-// ── HEADROOM ───────────────────────────────────────────
-let lastScrollY = 0;
-window.addEventListener('scroll', () => {
-  const hdr = document.getElementById('site-header');
-  const sy = window.scrollY;
-  if (sy > lastScrollY && sy > 80) {
-    hdr.classList.add('hidden');
-  } else {
-    hdr.classList.remove('hidden');
+// ── RENDER STREAMS ──────────────────────
+function renderStreams(streamers, hasOngoing) {
+  if (!hasOngoing || !streamers.length) return;
+
+  const sec = document.getElementById('live-section');
+  sec.style.display = 'block';
+
+  const cowatch  = streamers.filter(s => s.stream_type === '觀賽直播' || s.stream_type === '共同視聽');
+  const official = streamers.filter(s => s.stream_type === '賽事主台');
+
+  fillStreamPanel('cowatch-panel', cowatch);
+  fillStreamPanel('official-panel', official);
+}
+
+function fillStreamPanel(panelId, list) {
+  const el = document.getElementById(panelId);
+  if (!list.length) {
+    el.innerHTML = '<div class="empty">目前無直播資訊</div>';
+    return;
   }
-  lastScrollY = sy;
-}, { passive: true });
+  list.forEach((s, i) => {
+    const card = document.createElement('a');
+    const url = s.platform === 'YouTube'
+      ? `https://youtube.com/@${s.channel_id}`
+      : `https://twitch.tv/${s.channel_id || ''}`;
+    card.href = url; card.target = '_blank'; card.rel = 'noopener';
+    card.className = 'stream-card' + (i === 0 ? ' featured' : '');
 
-// ── BANNER CAROUSEL ────────────────────────────────────
+    const pClass = s.platform === 'YouTube' ? 'platform-youtube' : 'platform-twitch';
+    const pLabel = s.platform || 'Twitch';
+
+    const thumbHtml = s.thumbnail_url
+      ? `<img src="${s.thumbnail_url}" alt="${s.name}" loading="lazy">`
+      : `<div class="thumb-placeholder">▶</div>`;
+
+    const gotoBtn = i === 0
+      ? `<a class="goto-link" href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ 前往收看</a>`
+      : '';
+
+    card.innerHTML = `
+      <div class="stream-thumb">
+        ${thumbHtml}
+        <span class="platform-pill ${pClass}">${pLabel}</span>
+      </div>
+      <div class="stream-info">
+        <div class="stream-name">${s.name || ''}</div>
+        <div class="stream-game">${s.current_game || '載入中…'}</div>
+        ${s.stream_title ? `<div class="stream-title">${s.stream_title}</div>` : ''}
+        ${gotoBtn}
+      </div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('cowatch-panel').style.display  = tab === 'cowatch'  ? 'flex' : 'none';
+  document.getElementById('official-panel').style.display = tab === 'official' ? 'flex' : 'none';
+  document.getElementById('cowatch-panel').style.flexDirection  = 'column';
+  document.getElementById('official-panel').style.flexDirection = 'column';
+};
+
+// ── RENDER BANNERS ──────────────────────
 function renderBanners(banners) {
-  const container = document.getElementById('banner-container');
-  const filtered = banners.filter(b => b.placement === '首頁' || !b.placement);
-  filtered.sort((a, b) => (a.sort_order || 99) - (b.sort_order || 99));
+  const el = document.getElementById('carousel');
+  const list = banners
+    .filter(b => !b.placement || b.placement === '首頁')
+    .sort((a,b) => (+(a.sort_order)||99) - (+(b.sort_order)||99));
 
-  if (!filtered.length) {
-    container.innerHTML = `<div class="banner-carousel"><div class="banner-placeholder">目前沒有橫幅活動</div></div>`;
+  if (!list.length) {
+    el.innerHTML = '<div class="carousel-placeholder">目前沒有活動橫幅</div>';
     return;
   }
 
-  const slides = filtered.map((b, i) => `
-    <a class="banner-slide ${i === 0 ? 'active' : ''}" href="${b.target_link || '#'}" target="${b.target_link ? '_blank' : '_self'}">
-      ${b.image_url ? `<img src="${b.image_url}" alt="${b.title || ''}">` : ''}
-      <div class="banner-overlay"></div>
-      <div class="banner-content">
-        <div class="banner-tag">新活動</div>
-        <div class="banner-title">${b.title || ''}</div>
+  const slides = list.map((b, i) => `
+    <a class="c-slide ${i===0?'on':''}" href="${b.target_link||'#'}" target="${b.target_link?'_blank':'_self'}" rel="noopener">
+      ${b.image_url ? `<img src="${b.image_url}" alt="${b.title||''}">` : ''}
+      <div class="c-overlay"></div>
+      <div class="c-text">
+        <div class="c-tag">活動</div>
+        <div class="c-title">${b.title||''}</div>
       </div>
     </a>
   `).join('');
 
-  const dots = filtered.map((_, i) =>
-    `<button class="banner-dot ${i === 0 ? 'active' : ''}" data-i="${i}" onclick="goSlide(${i})" aria-label="橫幅 ${i+1}"></button>`
+  const dots = list.map((_,i) =>
+    `<button class="c-dot ${i===0?'on':''}" onclick="goDot(${i})" aria-label="橫幅${i+1}"></button>`
   ).join('');
 
-  container.innerHTML = `
-    <div class="banner-carousel" id="banner-carousel">
-      ${slides}
-      <div class="banner-dots">${dots}</div>
-    </div>
-  `;
+  el.innerHTML = slides + (list.length > 1 ? `<div class="c-dots">${dots}</div>` : '');
 
-  // Auto-play
-  if (filtered.length > 1) {
+  if (list.length > 1) {
     let cur = 0;
-    setInterval(() => {
-      cur = (cur + 1) % filtered.length;
-      goSlide(cur);
-    }, 5000);
+    setInterval(() => { cur = (cur+1) % list.length; goDot(cur); }, 5000);
   }
 }
 
-window.goSlide = function(idx) {
-  const slides = document.querySelectorAll('.banner-slide');
-  const dots = document.querySelectorAll('.banner-dot');
-  slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-  dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+window.goDot = function(idx) {
+  document.querySelectorAll('.c-slide').forEach((s,i) => s.classList.toggle('on', i===idx));
+  document.querySelectorAll('.c-dot').forEach((d,i) => d.classList.toggle('on', i===idx));
 };
 
-// ── STREAMS (mock / placeholder) ─────────────────────
-// Twitch/YouTube API 需要後端 proxy，這裡先用靜態 mock 展示 UI
-function renderStreams(streamers) {
-  const container = document.getElementById('stream-container');
+// ── NAV (placeholder) ───────────────────
+window.navTo = function(page) {
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  // 未來加入頁面切換邏輯
+};
 
-  // 模擬：找到 stream_type 是賽事主台或共同視聽的
-  const featured = streamers.filter(s =>
-    s.stream_type === '賽事主台' || s.stream_type === '共同視聽'
-  );
-  const daily = streamers.filter(s => s.stream_type === '日常推薦');
-
-  if (!streamers.length) {
-    container.innerHTML = `<p class="empty-state">目前無直播資訊</p>`;
-    return;
-  }
-
-  let html = '<div class="stream-grid">';
-
-  // 第一個是 featured 大卡
-  const first = featured[0] || streamers[0];
-  if (first) {
-    const platformClass = first.platform === 'YouTube' ? 'platform-youtube' : 'platform-twitch';
-    const channelUrl = first.platform === 'YouTube'
-      ? `https://youtube.com/@${first.channel_id}`
-      : `https://twitch.tv/${first.channel_id}`;
-
-    html += `
-      <a class="stream-card featured" href="${channelUrl}" target="_blank">
-        <div class="stream-thumb">
-          <div class="stream-thumb-placeholder" style="font-size:48px;background:#1a1a2e;">▶</div>
-          <span class="live-badge">LIVE</span>
-          <div class="viewer-badge"><span class="viewer-dot"></span>-- 人</div>
-        </div>
-        <div class="stream-info">
-          <div class="stream-platform ${platformClass}">${first.platform || 'Twitch'}</div>
-          <div class="stream-name">${first.name || ''}</div>
-          <div class="stream-game">正在載入遊戲資訊…</div>
-          <div class="stream-title">連接 Twitch API 後即可顯示實況標題與即時觀看人數</div>
-          <a href="${channelUrl}" target="_blank" class="watch-btn" onclick="event.stopPropagation()">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><polygon points="5,3 13,8 5,13"/></svg>
-            前往收看
-          </a>
-        </div>
-      </a>
-    `;
-  }
-
-  // 其餘共聽台小卡
-  featured.slice(1).concat(daily).forEach(s => {
-    const platformClass = s.platform === 'YouTube' ? 'platform-youtube' : 'platform-twitch';
-    const channelUrl = s.platform === 'YouTube'
-      ? `https://youtube.com/@${s.channel_id}`
-      : `https://twitch.tv/${s.channel_id}`;
-
-    html += `
-      <a class="stream-card" href="${channelUrl}" target="_blank">
-        <div class="stream-thumb">
-          <div class="stream-thumb-placeholder">▶</div>
-          <span class="offline-label" style="position:absolute;bottom:10px;left:10px;font-size:11px;color:#888;">未直播</span>
-        </div>
-        <div class="stream-info">
-          <div class="stream-platform ${platformClass}">${s.platform || 'Twitch'}</div>
-          <div class="stream-name">${s.name || ''}</div>
-          <div class="stream-game" style="font-size:11px;color:var(--text-dim);">${s.stream_type || ''}</div>
-        </div>
-      </a>
-    `;
-  });
-
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-// ── MATCHES ────────────────────────────────────────────
-function renderMatches(matches) {
-  const ongoingEl = document.getElementById('ongoing-container');
-  const upcomingEl = document.getElementById('upcoming-container');
-
-  const ongoing = matches.filter(isOngoing);
-  const upcoming = matches.filter(isUpcoming);
-  upcoming.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-
-  // Ongoing
-  if (!ongoing.length) {
-    ongoingEl.innerHTML = `<p class="empty-state">目前沒有進行中的賽事</p>`;
-  } else {
-    const grid = document.createElement('div');
-    grid.className = 'matches-grid';
-    ongoing.forEach(r => grid.appendChild(matchCard(r, true)));
-    ongoingEl.innerHTML = '';
-    ongoingEl.appendChild(grid);
-  }
-
-  // Upcoming
-  if (!upcoming.length) {
-    upcomingEl.innerHTML = `<p class="empty-state">近期暫無預定賽事</p>`;
-  } else {
-    const grid = document.createElement('div');
-    grid.className = 'matches-grid';
-    upcoming.forEach(r => grid.appendChild(matchCard(r, false)));
-    upcomingEl.innerHTML = '';
-    upcomingEl.appendChild(grid);
-  }
-}
-
-// ── INIT ───────────────────────────────────────────────
+// ── INIT ────────────────────────────────
 async function init() {
-  try {
-    const [matches, streamers, banners] = await Promise.allSettled([
-      fetchSheet('matches'),
-      fetchSheet('streamers'),
-      fetchSheet('banners'),
-    ]);
+  const [mRes, sRes, bRes] = await Promise.allSettled([
+    fetchSheet('matches'),
+    fetchSheet('streamers'),
+    fetchSheet('banners'),
+  ]);
 
-    if (banners.status === 'fulfilled') renderBanners(banners.value);
-    else document.getElementById('banner-container').innerHTML = '<div class="banner-carousel"><div class="banner-placeholder">無法載入橫幅</div></div>';
+  // Banners
+  if (bRes.status === 'fulfilled') renderBanners(bRes.value);
+  else document.getElementById('carousel').innerHTML = '<div class="carousel-placeholder">無法載入橫幅</div>';
 
-    if (streamers.status === 'fulfilled') renderStreams(streamers.value);
-    else document.getElementById('stream-container').innerHTML = '<p class="empty-state">無法載入直播名單</p>';
+  // Matches
+  let hasOngoing = false;
+  if (mRes.status === 'fulfilled') {
+    const { ongoing } = renderMatches(mRes.value);
+    hasOngoing = ongoing.length > 0;
+  } else {
+    document.getElementById('ongoing-list').innerHTML  = '<div class="empty">無法載入賽事資料</div>';
+    document.getElementById('upcoming-list').innerHTML = '';
+  }
 
-    if (matches.status === 'fulfilled') renderMatches(matches.value);
-    else {
-      document.getElementById('ongoing-container').innerHTML = '<p class="empty-state">無法載入賽事資料</p>';
-      document.getElementById('upcoming-container').innerHTML = '';
-    }
-  } catch (e) {
-    console.error('載入失敗', e);
+  // Streams（只在有進行中賽事時顯示）
+  if (sRes.status === 'fulfilled') {
+    renderStreams(sRes.value, hasOngoing);
   }
 }
 
