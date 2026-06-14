@@ -1550,12 +1550,30 @@ async function fetchSheet(sheetName) {
 // 把 gviz 格式轉成好用的物件陣列
 function parseSheet(json) {
   const cols = json.table.cols.map(c => c.label);
+  const colTypes = json.table.cols.map(c => c.type);
   const rows = json.table.rows || [];
   return rows.map(row => {
     const obj = {};
     cols.forEach((col, i) => {
       const cell = row.c[i];
-      obj[col] = cell ? (cell.v !== null && cell.v !== undefined ? cell.v : '') : '';
+      if (!cell || cell.v === null || cell.v === undefined) {
+        obj[col] = '';
+        return;
+      }
+      // Google gviz 日期格式是 "Date(year,month,day)" — month 從 0 開始
+      if (colTypes[i] === 'date' || colTypes[i] === 'datetime') {
+        const match = String(cell.v).match(/Date\((\d+),(\d+),(\d+)/);
+        if (match) {
+          const y = parseInt(match[1]);
+          const m = parseInt(match[2]) + 1; // 轉成 1-based
+          const d = parseInt(match[3]);
+          obj[col] = new Date(y, m - 1, d);
+        } else {
+          obj[col] = new Date(cell.v);
+        }
+      } else {
+        obj[col] = cell.v;
+      }
     });
     return obj;
   });
@@ -1564,10 +1582,12 @@ function parseSheet(json) {
 // 日期格式化
 function formatDateRange(start, end) {
   if (!start) return '';
-  const s = new Date(start);
+  const s = start instanceof Date ? start : new Date(start);
+  if (isNaN(s.getTime())) return '';
   const startStr = `${s.getMonth()+1}/${s.getDate()}`;
-  if (!end) return startStr;
-  const e = new Date(end);
+  if (!end) return `${startStr}（台灣時間）`;
+  const e = end instanceof Date ? end : new Date(end);
+  if (isNaN(e.getTime())) return `${startStr}（台灣時間）`;
   const endStr = `${e.getMonth()+1}/${e.getDate()}`;
   if (startStr === endStr) return `${startStr}（台灣時間）`;
   return `${startStr} ～ ${endStr}（台灣時間）`;
@@ -1581,11 +1601,11 @@ function parseLinks(text) {
 
 // 產生賽事卡片 HTML
 function renderEventCard(ev, isTwFiltered) {
-  const isTW = ev['台灣選手'] === true || ev['台灣選手'] === 'TRUE';
+  const isTW = ev['台灣選手'] === true || ev['台灣選手'] === 'TRUE' || ev['台灣選手'] === 1;
   if (isTwFiltered && !isTW) return '';
 
-  const isLive = ev['進行中'] === true || ev['進行中'] === 'TRUE';
-  const hasSchedule = ev['賽程連結'];
+  const isLive = ev['進行中'] === true || ev['進行中'] === 'TRUE' || ev['進行中'] === 1;
+  const hasSchedule = ev['賽程連結'] && String(ev['賽程連結']).startsWith('http') ? ev['賽程連結'] : null;
   const shortDesc = ev['短介紹'] || '';
   const detail = ev['詳細說明'] || '';
 
@@ -1633,9 +1653,10 @@ function renderEventCard(ev, isTwFiltered) {
 }
 
 // 月份標籤
-function getMonthLabel(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
+function getMonthLabel(dateVal) {
+  if (!dateVal) return '';
+  const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
+  if (isNaN(d.getTime())) return '';
   return `${d.getMonth() + 1} 月`;
 }
 
@@ -1648,7 +1669,7 @@ async function loadHomeEvents() {
 
     // 過濾顯示欄位
     const visible = events.filter(ev =>
-      ev['顯示'] === true || ev['顯示'] === 'TRUE' || ev['顯示'] === ''
+      ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
     );
 
     // 現正進行中
@@ -1671,7 +1692,7 @@ async function loadHomeEvents() {
         const isLive = ev['進行中'] === true || ev['進行中'] === 'TRUE';
         if (isLive) return false;
         if (cat !== '焦點大賽') return false;
-        const end = ev['結束日期'] ? new Date(ev['結束日期']) : null;
+        const end = ev['結束日期'] instanceof Date ? ev['結束日期'] : (ev['結束日期'] ? new Date(ev['結束日期']) : null);
         return !end || end >= today;
       })
       .slice(0, 4);
@@ -1702,7 +1723,7 @@ async function loadEventsPage() {
     today.setHours(0,0,0,0);
 
     const visible = events.filter(ev =>
-      ev['顯示'] === true || ev['顯示'] === 'TRUE' || ev['顯示'] === ''
+      ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
     );
 
     // 焦點大賽（依月份分組）
