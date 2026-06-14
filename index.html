@@ -1652,12 +1652,23 @@ function renderEventCard(ev, isTwFiltered) {
       </div>`;
 }
 
-// 月份標籤
+// 月份標籤（跨年時顯示年份）
 function getMonthLabel(dateVal) {
   if (!dateVal) return '';
   const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
   if (isNaN(d.getTime())) return '';
-  return `${d.getMonth() + 1} 月`;
+  const thisYear = new Date().getFullYear();
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  return year !== thisYear ? `${year} 年 ${month} 月` : `${month} 月`;
+}
+
+// 月份分組 key（用於比較是否同一個月）
+function getMonthKey(dateVal) {
+  if (!dateVal) return '';
+  const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
+  if (isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${d.getMonth()}`;
 }
 
 // ── 載入首頁賽事 ──
@@ -1685,7 +1696,7 @@ async function loadHomeEvents() {
       }
     }
 
-    // 近期賽事（焦點大賽，未來，最多4筆）
+    // 近期賽事（焦點大賽，未來，最多4筆，依日期排序）
     const upcomingEvs = visible
       .filter(ev => {
         const cat = ev['分類'] || '';
@@ -1694,6 +1705,11 @@ async function loadHomeEvents() {
         if (cat !== '焦點大賽') return false;
         const end = ev['結束日期'] instanceof Date ? ev['結束日期'] : (ev['結束日期'] ? new Date(ev['結束日期']) : null);
         return !end || end >= today;
+      })
+      .sort((a, b) => {
+        const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
+        const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
+        return da - db;
       })
       .slice(0, 4);
 
@@ -1739,14 +1755,20 @@ async function loadEventsPage() {
       if (featured.length === 0) {
         featuredContainer.innerHTML = '<div class="loading-placeholder">目前沒有焦點大賽</div>';
       } else {
-        // 按月份分組
+        // 依開始日期排序（由近到遠）
+        featured.sort((a, b) => {
+          const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
+          const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
+          return da - db;
+        });
+        // 依年月分組
         let html = '';
-        let currentMonth = '';
+        let currentKey = '';
         featured.forEach(ev => {
-          const month = getMonthLabel(ev['開始日期']);
-          if (month && month !== currentMonth) {
-            html += `<div class="month-label">${month}</div>`;
-            currentMonth = month;
+          const key = getMonthKey(ev['開始日期']);
+          if (key && key !== currentKey) {
+            html += `<div class="month-label">${getMonthLabel(ev['開始日期'])}</div>`;
+            currentKey = key;
           }
           html += renderEventCard(ev, false);
         });
