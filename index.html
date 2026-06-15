@@ -1343,9 +1343,9 @@ function toggleExpand(linkEl) {
 
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.page').forEach(function(page) {
-      var content = page.querySelector('.content');
+      var contentEl = page.querySelector('.content');
       var header = page.querySelector('header');
-      if (content && header) setupHeadroom(content, header);
+      if (contentEl && header) setupHeadroom(contentEl, header);
     });
   });
 })();
@@ -1724,12 +1724,20 @@ async function loadEventsPage() {
 
 // ── 初始化 ──
 document.addEventListener('DOMContentLoaded', function() {
+  // Headroom
+  document.querySelectorAll('.page').forEach(function(page) {
+    var contentEl = page.querySelector('.content');
+    var header = page.querySelector('header');
+    if (contentEl && header) setupHeadroom(contentEl, header);
+  });
+  // 初始頁面
   initPageFromHash();
+  // 資料載入
   loadHomeEvents();
   loadEventsPage();
   loadStreamers();
   shuffleLiveCards();
-  // 監聽瀏覽器上一頁/下一頁
+  // 瀏覽器上一頁/下一頁
   window.addEventListener('popstate', initPageFromHash);
 });
 
