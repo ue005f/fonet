@@ -1223,6 +1223,16 @@ function showPage(id) {
   if (content) content.scrollTop = 0;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.nav-item[data-page="' + id + '"]').forEach(b => b.classList.add('active'));
+  // 更新網址 hash，讓重新整理能回到同一頁
+  history.replaceState(null, '', '#' + id);
+}
+
+// 讀取 hash 決定初始頁面
+function initPageFromHash() {
+  const hash = window.location.hash.replace('#', '');
+  const validPages = ['home', 'live', 'events'];
+  const page = validPages.includes(hash) ? hash : 'home';
+  showPage(page);
 }
 
 function filterChip(chipEl, game) {
@@ -1418,15 +1428,25 @@ function renderEventCard(ev, isTwFiltered) {
   const detail = ev['詳細說明'] || '';
 
   const tags = [];
+  const repeatType = ev['重複類型'] || '';
   if (isLive) tags.push('<span class="tag tag-live">● 進行中</span>');
+  else if (repeatType === '每週') tags.push('<span class="tag tag-weekly">每週</span>');
+  else if (repeatType === '每月') tags.push('<span class="tag tag-weekly">每月</span>');
   if (isTW) tags.push('<span class="tag tag-tw">台灣選手</span>');
 
   // 日期處理
   let dateStr = '';
-  if (ev['重複類型'] === '每週') {
-    dateStr = `每週 · 下次：${ev['下次舉辦日期'] || ''}`;
-  } else if (ev['重複類型'] === '每月') {
-    dateStr = `每月 · 下次：${ev['下次舉辦日期'] || ''}`;
+  const repeatType = ev['重複類型'] || '';
+  if (repeatType === '每週' || repeatType === '每月') {
+    const nextDate = ev['下次舉辦日期'];
+    let nextStr = '';
+    if (nextDate) {
+      const d = nextDate instanceof Date ? nextDate : new Date(nextDate);
+      if (!isNaN(d.getTime())) {
+        nextStr = `${d.getMonth()+1}/${d.getDate()}`;
+      }
+    }
+    dateStr = nextStr ? `${repeatType} · 下次：${nextStr}（台灣時間）` : repeatType;
   } else {
     dateStr = formatDateRange(ev['開始日期'], ev['結束日期']);
   }
@@ -1704,9 +1724,13 @@ async function loadEventsPage() {
 
 // ── 初始化 ──
 document.addEventListener('DOMContentLoaded', function() {
+  initPageFromHash();
   loadHomeEvents();
   loadEventsPage();
   loadStreamers();
+  shuffleLiveCards();
+  // 監聽瀏覽器上一頁/下一頁
+  window.addEventListener('popstate', initPageFromHash);
 });
 
 </script>
