@@ -1436,7 +1436,6 @@ function renderEventCard(ev, isTwFiltered) {
 
   // 日期處理
   let dateStr = '';
-  const repeatType = ev['重複類型'] || '';
   if (repeatType === '每週' || repeatType === '每月') {
     const nextDate = ev['下次舉辦日期'];
     let nextStr = '';
