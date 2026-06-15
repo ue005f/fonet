@@ -1033,135 +1033,25 @@
       </div>
 
       <!-- Live list -->
-      <div class="live-card" data-game="sf6">
-        <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:24px;">⚔️</div>
-          <div class="live-dot">LIVE</div>
-        </div>
-        <div class="live-info">
-          <div class="live-name">Yoro</div>
-          <div class="live-game">Street Fighter 6</div>
-          <div class="live-platform">
-            <span>Twitch</span>
-          </div>
-        </div>
+
+
+      <!-- LIVE 區塊（之後由 Apps Script 驅動）-->
+      <div id="live-online-cards">
+        <!-- 目前無直播資料，待串接 Twitch API 後顯示 -->
       </div>
 
-      <div class="live-card" data-game="sf6">
-        <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:24px;">💥</div>
-          <div class="live-dot">LIVE</div>
-        </div>
-        <div class="live-info">
-          <div class="live-name">石油王</div>
-          <div class="live-game">Street Fighter 6</div>
-          <div class="live-platform">
-            <span>YouTube</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="live-card" data-game="ggst">
-        <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:24px;">⚡</div>
-          <div class="live-dot">LIVE</div>
-        </div>
-        <div class="live-info">
-          <div class="live-name">阿良_りょう</div>
-          <div class="live-game">Guilty Gear: Strive</div>
-          <div class="live-platform">
-            <span>Twitch</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="live-card" data-game="sf6">
-        <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:24px;">🎮</div>
-          <div class="live-dot">LIVE</div>
-        </div>
-        <div class="live-info">
-          <div class="live-name">板橋小結巴</div>
-          <div class="live-game">Street Fighter 6</div>
-          <div class="live-platform">
-            <span>Twitch</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- extra demo cards -->
-      <div class="live-card" data-game="kof">
-        <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:24px;">👊</div>
-          <div class="live-dot">LIVE</div>
-        </div>
-        <div class="live-info">
-          <div class="live-name">KOF_Taiwan</div>
-          <div class="live-game">The King of Fighters XV</div>
-          <div class="live-platform">
-            <span>YouTube</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="live-card" data-game="cotw">
-        <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:24px;">🐺</div>
-          <div class="live-dot">LIVE</div>
-        </div>
-        <div class="live-info">
-          <div class="live-name">餓狼玩家</div>
-          <div class="live-game">Fatal Fury: City of the Wolves</div>
-          <div class="live-platform">
-            <span>Twitch</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Offline toggle (only shown when 全部 chip active) -->
+      <!-- Offline toggle -->
       <div class="offline-section" id="offline-section">
         <button class="offline-toggle" onclick="toggleOffline(this)">
           <div class="offline-toggle-line"></div>
           <div class="offline-toggle-label">
-            OFFLINE <span style="color:var(--text3);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;">(100+)</span>
+            OFFLINE <span id="offline-count" style="color:var(--text3);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;"></span>
             <i class="offline-arrow">›</i>
           </div>
           <div class="offline-toggle-line"></div>
         </button>
-
         <div class="offline-list" id="offline-list">
-          <div class="live-card" data-game="tk8" style="opacity:0.45;">
-            <div class="live-thumb">
-              <div class="live-thumb-placeholder" style="font-size:24px; opacity:0.4;">🎮</div>
-            </div>
-            <div class="live-info">
-              <div class="live-name">綾綾</div>
-              <div class="live-game">Tekken 8</div>
-              <div class="live-platform"><span>上次直播：昨天</span></div>
-            </div>
-          </div>
-
-          <div class="live-card" data-game="sf6" style="opacity:0.45;">
-            <div class="live-thumb">
-              <div class="live-thumb-placeholder" style="font-size:24px; opacity:0.4;">⚔️</div>
-            </div>
-            <div class="live-info">
-              <div class="live-name">魯比</div>
-              <div class="live-game">Street Fighter 6</div>
-              <div class="live-platform"><span>上次直播：2 天前</span></div>
-            </div>
-          </div>
-
-          <div class="live-card" data-game="kof" style="opacity:0.45;">
-            <div class="live-thumb">
-              <div class="live-thumb-placeholder" style="font-size:24px; opacity:0.4;">👊</div>
-            </div>
-            <div class="live-info">
-              <div class="live-name">KOF_Offline</div>
-              <div class="live-game">The King of Fighters XV</div>
-              <div class="live-platform"><span>上次直播：3 天前</span></div>
-            </div>
-          </div>
+          <div class="loading-placeholder">載入中…</div>
         </div>
       </div>
 
@@ -1447,7 +1337,6 @@ function toggleExpand(linkEl) {
       var header = page.querySelector('header');
       if (content && header) setupHeadroom(content, header);
     });
-    shuffleLiveCards();
   });
 })();
 
@@ -1590,6 +1479,93 @@ function getMonthKey(dateVal) {
   return `${d.getFullYear()}-${d.getMonth()}`;
 }
 
+
+// ── 遊戲名稱對應 chip filter key ──
+const GAME_KEY_MAP = {
+  'Street Fighter 6': 'sf6',
+  'SF6': 'sf6',
+  'The King of Fighters XV': 'kof',
+  'KOF XV': 'kof',
+  'Fatal Fury: City of the Wolves': 'cotw',
+  'CotW': 'cotw',
+  '餓狼': 'cotw',
+  'Guilty Gear: Strive': 'ggst',
+  'GGST': 'ggst',
+  'Granblue Fantasy Versus: Rising': 'gbvsr',
+  'GBVSR': 'gbvsr',
+  'Tekken 8': 'tk8',
+  'TK8': 'tk8',
+  '鐵拳 8': 'tk8',
+};
+
+function getGameKey(gameName) {
+  if (!gameName) return 'other';
+  for (const [key, val] of Object.entries(GAME_KEY_MAP)) {
+    if (gameName.includes(key)) return val;
+  }
+  return 'other';
+}
+
+// 產生 offline 直播卡片 HTML
+function renderOfflineCard(streamer) {
+  const name = streamer['頻道名稱'] || '';
+  const game = streamer['主要遊戲'] || '';
+  const platform = streamer['平台'] || 'Twitch';
+  const twitchId = streamer['Twitch ID'] || '';
+  const gameKey = getGameKey(game);
+
+  const profileUrl = twitchId
+    ? `https://www.twitch.tv/${twitchId}`
+    : (streamer['YouTube ID'] ? `https://www.youtube.com/@${streamer['YouTube ID']}` : '#');
+
+  return `
+    <a href="${profileUrl}" target="_blank" style="text-decoration:none;">
+      <div class="live-card" data-game="${gameKey}" style="opacity:0.45;">
+        <div class="live-thumb">
+          <div class="live-thumb-placeholder" style="font-size:20px; opacity:0.4;">
+            ${platform === 'YouTube' ? '▶' : '◉'}
+          </div>
+        </div>
+        <div class="live-info">
+          <div class="live-name">${name}</div>
+          <div class="live-game">${game}</div>
+          <div class="live-platform"><span>${platform}</span></div>
+        </div>
+      </div>
+    </a>`;
+}
+
+// ── 載入實況名單 ──
+async function loadStreamers() {
+  try {
+    const streamers = await fetchSheet('實況名單');
+    const visible = streamers.filter(s =>
+      s['顯示'] !== false && s['顯示'] !== 'FALSE' && s['顯示'] !== 0
+    );
+
+    // 隨機排序
+    for (let i = visible.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [visible[i], visible[j]] = [visible[j], visible[i]];
+    }
+
+    const offlineList = document.getElementById('offline-list');
+    const offlineCount = document.getElementById('offline-count');
+
+    if (offlineList) {
+      offlineList.innerHTML = visible.map(s => renderOfflineCard(s)).join('');
+    }
+    if (offlineCount) {
+      offlineCount.textContent = `(${visible.length})`;
+    }
+
+  } catch(e) {
+    console.error('載入實況名單失敗', e);
+    const el = document.getElementById('offline-list');
+    if (el) el.innerHTML = '<div class="error-placeholder">資料載入失敗</div>';
+  }
+}
+
 // ── 載入首頁賽事 ──
 async function loadHomeEvents() {
   try {
@@ -1730,6 +1706,7 @@ async function loadEventsPage() {
 document.addEventListener('DOMContentLoaded', function() {
   loadHomeEvents();
   loadEventsPage();
+  loadStreamers();
 });
 
 </script>
