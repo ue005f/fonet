@@ -543,6 +543,71 @@
     flex-shrink: 0;
   }
 
+  /* ── Banner carousel ── */
+  .banner-carousel {
+    margin: 24px 18px 8px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+  }
+  .banner-slide {
+    display: none;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .banner-slide.active { display: block; }
+  /* 有圖片的 banner */
+  .banner-slide-img {
+    width: 100%;
+    aspect-ratio: 3/1;
+    object-fit: cover;
+    display: block;
+  }
+  /* 無圖片的 banner（文字版）*/
+  .banner-slide-text {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, #1C1A2E, #252040);
+    border: 1px solid rgba(168,85,247,0.1);
+    border-radius: var(--radius);
+  }
+  .banner-slide-body {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+  .banner-slide-body strong {
+    color: var(--text);
+    display: block;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  /* 分頁點點 */
+  .banner-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  .banner-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: background 0.2s, width 0.2s;
+    cursor: pointer;
+  }
+  .banner-dot.active {
+    background: var(--accent);
+    width: 14px;
+    border-radius: 3px;
+  }
+
   /* divider */
   .divider {
     height: 1px;
@@ -870,38 +935,22 @@
       <!-- Hero: 熱門直播 -->
       <div class="hero hero-panel" id="hero-hot">
         <div class="hero-img">
-          <div class="hero-art">SF6</div>
+          <div class="hero-art" id="hero-art-text">FGC</div>
           <div class="hero-gradient"></div>
         </div>
-        <div class="hero-content">
-          <div class="hero-event-name">EVO 2026</div>
-          <div class="hero-sub">
-            <span class="hero-live-badge">LIVE</span>
-            Yoro 正在觀賽 · Street Fighter 6 決賽
-          </div>
-          <div class="hero-cta">
-            <button class="btn-primary">前往 Twitch →</button>
-            <button class="btn-ghost">賽程表</button>
-          </div>
+        <div class="hero-content" id="hero-hot-content">
+          <div class="hero-event-name">載入中…</div>
         </div>
       </div>
 
       <!-- Hero: 賽事主台 -->
       <div class="hero hero-panel" id="hero-official" style="display:none;">
         <div class="hero-img" style="background: linear-gradient(135deg, #1a1030 0%, #0d0820 50%, #1a1030 100%);">
-          <div class="hero-art" style="font-size:52px; letter-spacing:-2px;">EVO<br>MAIN</div>
+          <div class="hero-art" style="font-size:52px; letter-spacing:-2px;" id="hero-official-art">FGC</div>
           <div class="hero-gradient"></div>
         </div>
-        <div class="hero-content">
-          <div class="hero-event-name">EVO 2026 官方主台</div>
-          <div class="hero-sub">
-            <span class="hero-live-badge">LIVE</span>
-            官方賽事轉播 · Street Fighter 6 Top 8
-          </div>
-          <div class="hero-cta">
-            <button class="btn-primary">前往官方直播 →</button>
-            <button class="btn-ghost">賽程表</button>
-          </div>
+        <div class="hero-content" id="hero-official-content">
+          <div class="hero-event-name">載入中…</div>
         </div>
       </div>
 
@@ -961,13 +1010,9 @@
         <div class="loading-placeholder">載入中…</div>
       </div>
 
-      <!-- Banner between sections -->
-      <div class="banner">
-        <div class="banner-text">
-          <strong>加入 Discord 社群</strong>
-          和台灣 FGC 玩家一起看比賽、討論技術
-        </div>
-        <button class="banner-btn">加入 ›</button>
+      <!-- Banner carousel -->
+      <div class="banner-carousel" id="banner-home" data-count="1">
+        <div class="loading-placeholder" style="padding:24px;">載入中…</div>
       </div>
 
       <!-- Upcoming -->
@@ -1111,13 +1156,9 @@
       <!-- ── 社群 & 聯賽 panel ── -->
       <div id="events-community" style="display:none;">
 
-        <!-- Banner -->
-        <div class="banner" style="margin-top:12px;">
-          <div class="banner-text">
-            <strong>贊助商廣告</strong>
-            歡迎接洽合作，支持台灣 FGC 社群
-          </div>
-          <button class="banner-btn">了解更多 ›</button>
+        <!-- Banner carousel -->
+        <div class="banner-carousel" id="banner-community" data-count="1" style="margin-top:12px;">
+          <div class="loading-placeholder" style="padding:24px;">載入中…</div>
         </div>
 
         <div class="section-sub-label">聯賽</div>
@@ -1337,6 +1378,90 @@ function setupHeadroom(contentEl, headerEl) {
       ticking = true;
     }
   });
+}
+
+
+// ════════════════════════════════════════════
+// Banner 輪播
+// ════════════════════════════════════════════
+const bannerTimers = {};
+
+function renderBannerCarousel(containerId, slides) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!slides || slides.length === 0) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+
+  container.setAttribute('data-count', slides.length);
+
+  // Build slides HTML
+  let slidesHTML = slides.map((s, i) => {
+    const isActive = i === 0 ? 'active' : '';
+    const href = s['連結'] || '#';
+    const hasImg = s['圖片網址'] && s['圖片網址'].startsWith('http');
+
+    if (hasImg) {
+      return `<a class="banner-slide ${isActive}" href="${href}" target="_blank">
+        <img class="banner-slide-img" src="${s['圖片網址']}" alt="${s['標題'] || ''}">
+      </a>`;
+    } else {
+      return `<a class="banner-slide ${isActive}" href="${href}" target="_blank" style="text-decoration:none;">
+        <div class="banner-slide-text">
+          <div class="banner-text-content">
+            <strong>${s['標題'] || ''}</strong>
+            ${s['說明文字'] || ''}
+          </div>
+          ${s['按鈕文字'] ? `<button class="banner-btn" onclick="event.preventDefault()">${s['按鈕文字']}</button>` : ''}
+        </div>
+      </a>`;
+    }
+  }).join('');
+
+  // Dots
+  const dotsHTML = slides.length > 1
+    ? `<div class="banner-dots">${slides.map((_, i) =>
+        `<div class="banner-dot ${i === 0 ? 'active' : ''}"></div>`
+      ).join('')}</div>`
+    : '';
+
+  container.innerHTML = slidesHTML + dotsHTML;
+
+  // Auto-rotate if more than 1 slide
+  if (slides.length > 1) {
+    let current = 0;
+    if (bannerTimers[containerId]) clearInterval(bannerTimers[containerId]);
+    bannerTimers[containerId] = setInterval(() => {
+      const allSlides = container.querySelectorAll('.banner-slide');
+      const allDots = container.querySelectorAll('.banner-dot');
+      allSlides[current].classList.remove('active');
+      allDots[current].classList.remove('active');
+      current = (current + 1) % slides.length;
+      allSlides[current].classList.add('active');
+      allDots[current].classList.add('active');
+    }, 8000);
+  }
+}
+
+async function loadBanners() {
+  try {
+    const banners = await fetchSheet('Banner');
+    const visible = banners
+      .filter(b => b['顯示'] !== false && b['顯示'] !== 'FALSE' && b['顯示'] !== 0)
+      .sort((a, b) => (Number(a['順序']) || 0) - (Number(b['順序']) || 0));
+
+    renderBannerCarousel('banner-home', visible);
+    renderBannerCarousel('banner-community', visible);
+  } catch(e) {
+    console.error('載入 Banner 失敗', e);
+    // Hide banners on error
+    ['banner-home', 'banner-community'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
 }
 
 // ════════════════════════════════════════════
@@ -1724,6 +1849,9 @@ document.addEventListener('DOMContentLoaded', function() {
   loadHomeEvents();
   loadEventsPage();
   loadStreamers();
+  loadBanners();
+  loadHero();
+  loadBanners();
   shuffleLiveCards();
   // 瀏覽器上一頁/下一頁
   window.addEventListener('popstate', initPageFromHash);
