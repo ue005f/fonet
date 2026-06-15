@@ -1319,36 +1319,25 @@ function toggleExpand(linkEl) {
 }
 
 // ── Headroom: hide header on scroll down, show on scroll up ──
-(function() {
+function setupHeadroom(contentEl, headerEl) {
   var lastY = 0;
   var ticking = false;
-
-  function setupHeadroom(contentEl, headerEl) {
-    contentEl.addEventListener('scroll', function() {
-      if (!ticking) {
-        requestAnimationFrame(function() {
-          var y = contentEl.scrollTop;
-          if (y > lastY && y > 60) {
-            headerEl.classList.add('hidden');
-          } else {
-            headerEl.classList.remove('hidden');
-          }
-          lastY = y;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.page').forEach(function(page) {
-      var contentEl = page.querySelector('.content');
-      var header = page.querySelector('header');
-      if (contentEl && header) setupHeadroom(contentEl, header);
-    });
+  contentEl.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(function() {
+        var y = contentEl.scrollTop;
+        if (y > lastY && y > 60) {
+          headerEl.classList.add('hidden');
+        } else {
+          headerEl.classList.remove('hidden');
+        }
+        lastY = y;
+        ticking = false;
+      });
+      ticking = true;
+    }
   });
-})();
+}
 
 // ════════════════════════════════════════════
 // Google Sheets 串接
