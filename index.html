@@ -903,14 +903,19 @@
   .event-expand-inner p { margin-bottom: 6px; }
   .event-expand-inner p:last-child { margin-bottom: 0; }
 
-  /* 展開遮罩：點任何地方收起 */
+  /* 展開遮罩：點任何地方收起，但不擋捲動 */
   .expand-overlay {
     position: fixed;
     inset: 0;
     z-index: 50;
     display: none;
+    pointer-events: none; /* 預設不攔截任何事件 */
   }
-  .expand-overlay.active { display: block; }
+  .expand-overlay.active {
+    display: block;
+    pointer-events: auto; /* 啟用時攔截點擊 */
+    touch-action: none; /* 但只攔截點擊，不攔截捲動 */
+  }
 
   /* 展開時卡片有輕微高亮 */
   .event-card.expanded {
@@ -1353,32 +1358,39 @@ function toggleExpand(linkEl) {
   const isOpen = expand.classList.contains('open');
 
   if (isOpen) {
-    // 收起
     closeAllExpands();
   } else {
-    // 先收起其他所有展開的卡片
     closeAllExpands();
-    // 展開這個
     expand.classList.add('open');
     linkEl.classList.add('open');
     if (card) card.classList.add('expanded');
-    // 顯示遮罩
-    document.getElementById('expand-overlay').classList.add('active');
     // 捲動讓卡片保持在視窗中
     setTimeout(() => {
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 50);
+    // 下一個 tick 才綁定，避免立刻觸發
+    setTimeout(() => {
+      document._expandListener = function(e) {
+        if (!card.contains(e.target)) {
+          closeAllExpands();
+        }
+      };
+      document.addEventListener('click', document._expandListener);
+      document.addEventListener('touchstart', document._expandListener);
+    }, 0);
   }
 }
 
 function closeAllExpands() {
-  // 收起所有展開的卡片
   document.querySelectorAll('.event-expand.open').forEach(el => el.classList.remove('open'));
   document.querySelectorAll('.detail-link.open').forEach(el => el.classList.remove('open'));
   document.querySelectorAll('.event-card.expanded').forEach(el => el.classList.remove('expanded'));
-  // 隱藏遮罩
-  const overlay = document.getElementById('expand-overlay');
-  if (overlay) overlay.classList.remove('active');
+  // 移除點擊監聽器
+  if (document._expandListener) {
+    document.removeEventListener('click', document._expandListener);
+    document.removeEventListener('touchstart', document._expandListener);
+    document._expandListener = null;
+  }
 }
 
 // ── Headroom: hide header on scroll down, show on scroll up ──
