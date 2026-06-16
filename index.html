@@ -1185,102 +1185,82 @@
 </div><!-- /phone -->
 
 <script>
+// ── 畫面上方的卡片隨機打亂 ──
 function shuffleLiveCards() {
   const liveSection = document.querySelector('#page-live .content');
   if (!liveSection) return;
-  // Get all online live cards (not in offline-list)
   const onlineCards = Array.from(liveSection.querySelectorAll('.live-card:not(.offline-list .live-card)'));
   if (onlineCards.length < 2) return;
-  // Find insertion point (before offline section)
   const offlineSection = document.getElementById('offline-section');
-  // Shuffle
   for (let i = onlineCards.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [onlineCards[i], onlineCards[j]] = [onlineCards[j], onlineCards[i]];
   }
-  // Re-insert in shuffled order
   onlineCards.forEach(card => {
-    liveSection.insertBefore(card, offlineSection);
+    if (offlineSection) liveSection.insertBefore(card, offlineSection);
+    else liveSection.appendChild(card);
   });
 }
 
-function toggleAbout(btn) {
-  const about = document.getElementById('menu-about');
-  about.classList.toggle('open');
-}
-
-function openMenu() {
-  document.getElementById('menu-overlay').classList.add('open');
-}
-
-function closeMenu(e) {
-  document.getElementById('menu-overlay').classList.remove('open');
-}
-
-function showPage(id) {
+// ── 頁面切換控制 ──
+function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('page-' + id);
-  target.classList.add('active');
-  const content = target.querySelector('.content');
+  if (target) target.classList.add('active');
+  const content = target ? target.querySelector('.content') : null;
   if (content) content.scrollTop = 0;
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.nav-item[data-page="' + id + '"]').forEach(b => b.classList.add('active'));
-  // 更新網址 hash，讓重新整理能回到同一頁
-  history.replaceState(null, '', '#' + id);
+
+  // 更新導覽列高亮狀態
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+    if (item.getAttribute('data-page') === id) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // 更新頁面切換器按鈕（測試用）
+  if (btn && btn.closest('.switcher')) {
+    btn.closest('.switcher').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
 }
 
-// 讀取 hash 決定初始頁面
-function initPageFromHash() {
-  const hash = window.location.hash.replace('#', '');
-  const validPages = ['home', 'live', 'events'];
-  const page = validPages.includes(hash) ? hash : 'home';
-  showPage(page);
-}
-
-function filterChip(chipEl, game) {
-  // Update chip styles
+// ── 直播頁：遊戲篩選 Chip 點擊事件 ──
+function filterGame(game, chipEl) {
   chipEl.closest('.filter-chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
-  // Show/hide offline section — only visible on 全部
-  const offlineSection = document.getElementById('offline-section');
-  if (offlineSection) {
-    offlineSection.style.display = (game === 'all') ? '' : 'none';
-  }
-  // Filter live cards (exclude offline-list cards when not 全部)
+
   const cards = document.querySelectorAll('#page-live .live-card');
   cards.forEach(card => {
-    const g = card.dataset.game || 'other';
-    const mainGames = ['sf6','kof','cotw','ggst','gbvsr','tk8'];
     if (game === 'all') {
-      // Only show online cards here; offline list handles its own
-      if (!card.closest('.offline-list')) card.style.display = '';
-    } else if (game === 'other') {
       if (!card.closest('.offline-list')) {
-        card.style.display = mainGames.includes(g) ? 'none' : '';
+        card.style.display = '';
       }
     } else {
       if (!card.closest('.offline-list')) {
-        card.style.display = (g === game) ? '' : 'none';
+        card.style.display = (card.dataset.game === game) ? '' : 'none';
       }
     }
   });
 }
 
+// ── 賽事頁：切換「焦點大賽」與「社群賽事」 ──
 function switchEventsTab(tabEl, panel) {
   tabEl.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   tabEl.classList.add('active');
   document.getElementById('events-featured').style.display = panel === 'featured' ? '' : 'none';
   document.getElementById('events-community').style.display = panel === 'community' ? '' : 'none';
-  // Show/hide TW toggle — only on 焦點大賽
+  
   const twRow = document.getElementById('tw-toggle').parentElement;
   twRow.style.display = panel === 'featured' ? '' : 'none';
-  // Re-apply TW filter
   if (panel === 'featured') {
     const twOn = document.getElementById('tw-toggle').classList.contains('on');
     applyTWFilter(twOn);
   }
 }
 
+// ── 賽事頁：台灣選手篩選開關 ──
 function toggleTW(el) {
   el.classList.toggle('on');
   applyTWFilter(el.classList.contains('on'));
@@ -1297,6 +1277,7 @@ function applyTWFilter(twOn) {
   });
 }
 
+// ── 直播頁：展開/收合離線名單 ──
 function toggleOffline(btn) {
   const list = document.getElementById('offline-list');
   const isOpen = list.classList.contains('open');
@@ -1304,15 +1285,16 @@ function toggleOffline(btn) {
   btn.classList.toggle('open', !isOpen);
 }
 
+// ── 首頁：大看板英雄榜 Tab 切換 ──
 function switchHeroTab(tabEl, panelId) {
-  // Update tab styles
   tabEl.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   tabEl.classList.add('active');
-  // Switch hero panels
   document.querySelectorAll('.hero-panel').forEach(p => p.style.display = 'none');
-  document.getElementById('hero-' + panelId).style.display = 'block';
+  const targetPanel = document.getElementById('hero-' + panelId);
+  if (targetPanel) targetPanel.style.display = 'block';
 }
 
+// ── 賽事說明詳細展開 ──
 function toggleExpand(linkEl) {
   const expand = linkEl.nextElementSibling;
   const isOpen = expand.classList.contains('open');
@@ -1320,7 +1302,7 @@ function toggleExpand(linkEl) {
   linkEl.classList.toggle('open', !isOpen);
 }
 
-// ── Headroom: hide header on scroll down, show on scroll up ──
+// ── Headroom 效果（往下滑隱藏 Header，往上滑顯示） ──
 function setupHeadroom(contentEl, headerEl) {
   var lastY = 0;
   var ticking = false;
@@ -1330,7 +1312,7 @@ function setupHeadroom(contentEl, headerEl) {
         var y = contentEl.scrollTop;
         if (y > lastY && y > 60) {
           headerEl.classList.add('hidden');
-        } else {
+        } else if (y < lastY) {
           headerEl.classList.remove('hidden');
         }
         lastY = y;
@@ -1341,171 +1323,131 @@ function setupHeadroom(contentEl, headerEl) {
   });
 }
 
+// ── 三點功能選單控制 ──
+function openMenu() { document.getElementById('menu-overlay').classList.add('open'); }
+function closeMenu(e) { document.getElementById('menu-overlay').classList.remove('open'); }
+function toggleAbout(btn) { document.getElementById('menu-about').classList.toggle('open'); }
 
-// ════════════════════════════════════════════
-// ── Hero 區 ──
-async function loadHero() {
-  try {
-    const events = await fetchSheet('賽事');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+// ── 首頁：大看板渲染邏輯 ──
+function renderHomeFeatured(events) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  
+  const liveEvs = events.filter(e => e['進行中'] === true || e['進行中'] === 'TRUE');
+  const upcoming = events.filter(e => {
+    const sd = e['開始日期'] instanceof Date ? e['開始日期'] : new Date(e['開始日期'] || 0);
+    return sd >= today && (e['進行中'] !== true && e['進行中'] !== 'TRUE');
+  });
 
-    const visible = events.filter(ev =>
-      ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
-    );
-
-    // 優先：進行中的焦點大賽
-    let hero = visible.find(ev =>
-      (ev['進行中'] === true || ev['進行中'] === 'TRUE') &&
-      ev['分類'] === '焦點大賽'
-    );
-
-    // 其次：最近即將到來的焦點大賽
-    if (!hero) {
-      const upcoming = visible
-        .filter(ev => {
-          const start = ev['開始日期'] instanceof Date ? ev['開始日期'] : new Date(ev['開始日期'] || 0);
-          return ev['分類'] === '焦點大賽' && start >= today;
-        })
-        .sort((a, b) => {
-          const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
-          const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
-          return da - db;
-        });
-      hero = upcoming[0];
-    }
-
-    // 沒有賽事 → 隱藏整個 Hero 區塊
-    if (!hero) {
-      const heroHot = document.getElementById('hero-hot');
-      const heroOfficial = document.getElementById('hero-official');
-      const heroTabs = document.querySelector('#page-home .tabs');
-      if (heroHot) heroHot.style.display = 'none';
-      if (heroOfficial) heroOfficial.style.display = 'none';
-      if (heroTabs) heroTabs.style.display = 'none';
-      return;
-    }
-
-    const isLive = hero['進行中'] === true || hero['進行中'] === 'TRUE';
-    const name = hero['名稱'] || '';
-    const dateStr = formatDateRange(hero['開始日期'], hero['結束日期']);
-    const shortDesc = hero['短介紹'] || '';
-    const scheduleUrl = hero['賽程連結'] || '';
-    const isTW = hero['台灣選手'] === true || hero['台灣選手'] === 'TRUE';
-
-    // 藝術字
-    const artEl = document.getElementById('hero-art-text');
-    if (artEl) artEl.textContent = name.split(' ')[0] || name;
-
-    // 熱門直播：沒有比賽時顯示「目前沒有觀賽派對」
-    const hotContent = document.getElementById('hero-hot-content');
-    if (hotContent) {
-      if (!isLive) {
-        // 即將到來的賽事
-        hotContent.innerHTML = `
-          <div class="hero-event-name">${name}</div>
-          <div class="hero-sub">
-            <span style="font-size:11px;color:var(--text2);">即將開始 · ${dateStr}</span>
-          </div>
-          ${shortDesc ? `<div style="font-size:12px;color:var(--text2);margin-top:4px;">${shortDesc}</div>` : ''}
-          <div class="hero-cta">
-            ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
-            <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
-          </div>`;
-      } else {
-        // 進行中但沒有觀賽派對
-        hotContent.innerHTML = `
-          <div class="hero-event-name">${name}</div>
-          <div class="hero-sub">
-            <span class="hero-live-badge">LIVE</span>
-            目前沒有觀賽派對
-          </div>
-          <div class="hero-cta">
-            ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
-            <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
-          </div>`;
-      }
-    }
-
-    // 賽事主台
-    const officialArt = document.getElementById('hero-official-art');
-    if (officialArt) officialArt.textContent = name.split(' ')[0] || name;
-
-    const officialContent = document.getElementById('hero-official-content');
-    if (officialContent) {
-      officialContent.innerHTML = `
-        <div class="hero-event-name">${name} 官方主台</div>
-        <div class="hero-sub">
-          ${isLive ? '<span class="hero-live-badge">LIVE</span>' : '<span style="font-size:11px;color:var(--text2);">即將開始</span>'}
-          官方賽事轉播
-        </div>
-        <div class="hero-cta">
-          ${scheduleUrl
-            ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">前往官方直播 →</button></a>`
-            : '<button class="btn-primary" style="opacity:0.4;cursor:default;">直播連結待定</button>'}
-          <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
-        </div>`;
-    }
-
-  } catch(e) {
-    console.error('載入 Hero 失敗', e);
+  let hero = null;
+  if (liveEvs.length > 0) {
+    hero = liveEvs[0];
+  } else if (upcoming.length > 0) {
+    upcoming.sort((a,b) => {
+      const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
+      const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
+      return da - db;
+    });
+    hero = upcoming[0];
   }
-}
 
-// Banner 輪播
-// ════════════════════════════════════════════
-const bannerTimers = {};
-
-function renderBannerCarousel(containerId, slides) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  if (!slides || slides.length === 0) {
-    container.innerHTML = '';
-    container.style.display = 'none';
+  if (!hero) {
+    const heroHot = document.getElementById('hero-hot');
+    const heroOfficial = document.getElementById('hero-official');
+    const heroTabs = document.querySelector('#page-home .tabs');
+    if (heroHot) heroHot.style.display = 'none';
+    if (heroOfficial) heroOfficial.style.display = 'none';
+    if (heroTabs) heroTabs.style.display = 'none';
     return;
   }
 
-  container.setAttribute('data-count', slides.length);
+  const isLive = hero['進行中'] === true || hero['進行中'] === 'TRUE';
+  const name = hero['名稱'] || '';
+  const dateStr = formatDateRange(hero['開始日期'], hero['結束日期']);
+  const shortDesc = hero['短介紹'] || '';
+  const scheduleUrl = hero['賽程連結'] || '';
 
-  // Build slides HTML
-  let slidesHTML = slides.map((s, i) => {
-    const isActive = i === 0 ? 'active' : '';
-    const href = s['連結'] || '#';
-    const hasImg = s['圖片網址'] && s['圖片網址'].startsWith('http');
+  const artEl = document.getElementById('hero-art-text');
+  if (artEl) artEl.textContent = name.split(' ')[0] || name;
 
-    if (hasImg) {
-      return `<a class="banner-slide ${isActive}" href="${href}" target="_blank">
-        <img class="banner-slide-img" src="${s['圖片網址']}" alt="${s['標題'] || ''}">
-      </a>`;
-    } else {
-      return `<a class="banner-slide ${isActive}" href="${href}" target="_blank" style="text-decoration:none;">
-        <div class="banner-slide-text">
-          <div class="banner-text-content">
-            <strong>${s['標題'] || ''}</strong>
-            ${s['說明文字'] || ''}
-          </div>
-          ${s['按鈕文字'] ? `<button class="banner-btn" onclick="event.preventDefault()">${s['按鈕文字']}</button>` : ''}
+  const hotContent = document.getElementById('hero-hot-content');
+  if (hotContent) {
+    if (!isLive) {
+      hotContent.innerHTML = `
+        <div class="hero-event-name">${name}</div>
+        <div class="hero-sub">
+          <span style="font-size:11px;color:var(--text2);">即將開始 · ${dateStr}</span>
         </div>
-      </a>`;
+        ${shortDesc ? `<div style="font-size:12px;color:var(--text2);margin-top:4px;">${shortDesc}</div>` : ''}
+        <div class="hero-cta">
+          ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+          <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
+        </div>`;
+    } else {
+      hotContent.innerHTML = `
+        <div class="hero-event-name">${name}</div>
+        <div class="hero-sub">
+          <span class="hero-live-badge">LIVE</span> 目前沒有觀賽派對
+        </div>
+        <div class="hero-cta">
+          ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+          <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
+        </div>`;
+    }
+  }
+
+  const officialContent = document.getElementById('hero-official-content');
+  const officialArt = document.getElementById('hero-official-art');
+  if (officialArt) officialArt.textContent = name.split(' ')[0] || name;
+  if (officialContent) {
+    officialContent.innerHTML = `
+      <div class="hero-event-name">${name}</div>
+      <div class="hero-sub">
+        ${isLive ? '<span class="hero-live-badge">LIVE</span> 大會官方主台' : `<span style="font-size:11px;color:var(--text2);">${dateStr}</span>`}
+      </div>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="showPage('live')">前往直播主頁 →</button>
+      </div>`;
+  }
+}
+
+// ── 橫幅廣告 (Banner) 輪播控制 ──
+let bannerTimers = {};
+function renderBannerCarousel(containerId, slides) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (slides.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  const slidesHTML = slides.map((s, i) => {
+    const link = s['點擊連結'] || '#';
+    if (s['圖片網址']) {
+      return `<a href="${link}" target="_blank" class="banner-slide ${i === 0 ? 'active' : ''}"><img src="${s['圖片網址']}" class="banner-slide-img"></a>`;
+    } else {
+      return `
+        <a href="${link}" target="_blank" style="text-decoration:none;" class="banner-slide ${i === 0 ? 'active' : ''}">
+          <div class="banner-slide-text">
+            <div class="banner-slide-body">
+              <strong>${s['標題'] || ''}</strong>
+              ${s['說明文字'] || ''}
+            </div>
+            ${s['按鈕文字'] ? `<button class="banner-btn" onclick="event.preventDefault()">${s['按鈕文字']}</button>` : ''}
+          </div>
+        </a>`;
     }
   }).join('');
 
-  // Dots
-  const dotsHTML = slides.length > 1
-    ? `<div class="banner-dots">${slides.map((_, i) =>
-        `<div class="banner-dot ${i === 0 ? 'active' : ''}"></div>`
-      ).join('')}</div>`
-    : '';
-
+  const dotsHTML = slides.length > 1 ? `<div class="banner-dots">${slides.map((_, i) => `<div class="banner-dot ${i === 0 ? 'active' : ''}"></div>`).join('')}</div>` : '';
   container.innerHTML = slidesHTML + dotsHTML;
 
-  // Auto-rotate if more than 1 slide
   if (slides.length > 1) {
     let current = 0;
     if (bannerTimers[containerId]) clearInterval(bannerTimers[containerId]);
     bannerTimers[containerId] = setInterval(() => {
       const allSlides = container.querySelectorAll('.banner-slide');
       const allDots = container.querySelectorAll('.banner-dot');
+      if (!allSlides[current] || !allDots[current]) return;
       allSlides[current].classList.remove('active');
       allDots[current].classList.remove('active');
       current = (current + 1) % slides.length;
@@ -1521,12 +1463,10 @@ async function loadBanners() {
     const visible = banners
       .filter(b => b['顯示'] !== false && b['顯示'] !== 'FALSE' && b['顯示'] !== 0)
       .sort((a, b) => (Number(a['順序']) || 0) - (Number(b['順序']) || 0));
-
     renderBannerCarousel('banner-home', visible);
     renderBannerCarousel('banner-community', visible);
   } catch(e) {
     console.error('載入 Banner 失敗', e);
-    // Hide banners on error
     ['banner-home', 'banner-community'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -1535,94 +1475,34 @@ async function loadBanners() {
 }
 
 // ════════════════════════════════════════════
-// Google Sheets 串接
+// Google Sheets 試算表串接核心核心
 // ════════════════════════════════════════════
-const SHEETS_ID = '1MBU9FQYsPqEwSgdAjmfxzOETK8vmBPY_JeNkP6vNgCw';
-const YOUTUBE_API_KEY = 'AIzaSyAR_Nr9dZw3HYqcoUcHPDeh1aGfIAdmu5Q'; // ← 填入你的 YouTube API 金鑰
+const SHEETS_ID = '1MBU9FQYsPqEwSgdAjmfxzOETK8vmBPY_JeNkP6vNgCw'; 
 
-// ── YouTube API ──
-async function fetchYoutubeLiveStatus(channelIds) {
-  const results = {};
-
-  // 一個頻道一個頻道查
-  for (const channelId of channelIds) {
-    try {
-      const url =
-        `https://www.googleapis.com/youtube/v3/search` +
-        `?part=snippet` +
-        `&channelId=${channelId}` +
-        `&eventType=live` +
-        `&type=video` +
-        `&key=${YOUTUBE_API_KEY}`;
-
-      const res = await fetch(url);
-
-      // 顯示 API 錯誤
-      if (!res.ok) {
-        console.error(
-          "YouTube API error:",
-          res.status,
-          await res.text()
-        );
-        continue;
-      }
-
-      const data = await res.json();
-
-      // debug：看 API 回傳什麼
-      console.log("Checking channel:", channelId, data);
-
-      // 有直播
-      if (data.items && data.items.length > 0) {
-        const item = data.items[0];
-
-        results[channelId] = {
-          isLive: true,
-          title: item.snippet.title || "",
-          game: item.snippet.description || "",
-          thumbnail: item.snippet.thumbnails?.medium?.url || "",
-          videoId: item.id.videoId || "",
-          channelTitle: item.snippet.channelTitle || ""
-        };
-      }
-
-    } catch (e) {
-      console.error("YouTube fetch error:", e);
-    }
-  }
-
-  return results;
-}
-
-// 讀取 Sheets 某個分頁的所有資料
 async function fetchSheet(sheetName) {
   const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-  const res = await fetch(url);
-  const text = await res.text();
-  // Google 回傳的格式有前綴要去掉
-  const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-  return parseSheet(json);
-}
-
-// 把 gviz 格式轉成好用的物件陣列
-function parseSheet(json) {
-  const cols = json.table.cols.map(c => c.label);
-  const colTypes = json.table.cols.map(c => c.type);
+  const resp = await fetch(url);
+  const text = await resp.text();
+  const json = JSON.parse(text.substring(47, text.length - 2));
+  
+  const cols = json.table.cols.map(c => c ? c.label : '');
+  const colTypes = json.table.cols.map(c => c ? c.type : '');
   const rows = json.table.rows || [];
+  
   return rows.map(row => {
     const obj = {};
     cols.forEach((col, i) => {
+      if (!col) return;
       const cell = row.c[i];
       if (!cell || cell.v === null || cell.v === undefined) {
         obj[col] = '';
         return;
       }
-      // Google gviz 日期格式是 "Date(year,month,day)" — month 從 0 開始
       if (colTypes[i] === 'date' || colTypes[i] === 'datetime') {
         const match = String(cell.v).match(/Date\((\d+),(\d+),(\d+)/);
         if (match) {
           const y = parseInt(match[1]);
-          const m = parseInt(match[2]) + 1; // 轉成 1-based
+          const m = parseInt(match[2]) + 1;
           const d = parseInt(match[3]);
           obj[col] = new Date(y, m - 1, d);
         } else {
@@ -1636,7 +1516,7 @@ function parseSheet(json) {
   });
 }
 
-// 日期格式化
+// 日期格式化工具
 function formatDateRange(start, end) {
   if (!start) return '';
   const s = start instanceof Date ? start : new Date(start);
@@ -1650,7 +1530,7 @@ function formatDateRange(start, end) {
   return `${startStr} ～ ${endStr}（台灣時間）`;
 }
 
-// 解析詳細說明裡的連結 [文字](url)
+// 解析詳細說明裡的 Markdown 連結格式 [文字](url)
 function parseLinks(text) {
   if (!text) return '';
   return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);text-decoration:none;">$1</a>');
@@ -1658,78 +1538,55 @@ function parseLinks(text) {
 
 // 產生賽事卡片 HTML
 function renderEventCard(ev, isTwFiltered) {
-  const isTW = ev['台灣選手'] === true || ev['台灣選手'] === 'TRUE' || ev['台灣選手'] === 1;
-  if (isTwFiltered && !isTW) return '';
+  const isTW = ev['台灣選手'] === true || ev['台灣選手'] === 'TRUE';
+  const tags = [];
+  if (isLive) tags.push('<span class="tag tag-live">LIVE</span>');
+  if (isTW) tags.push('<span class="tag tag-tw">TW</span>');
+  if (ev['主要遊戲']) tags.push(`<span class="tag tag-game">${ev['主要遊戲']}</span>`);
+  if (ev['週期']) tags.push(`<span class="tag tag-weekly">${ev['週期']}</span>`);
 
-  const isLive = ev['進行中'] === true || ev['進行中'] === 'TRUE' || ev['進行中'] === 1;
-  const hasSchedule = ev['賽程連結'] && String(ev['賽程連結']).startsWith('http') ? ev['賽程連結'] : null;
+  const dateStr = formatDateRange(ev['開始日期'], ev['結束日期']);
   const shortDesc = ev['短介紹'] || '';
   const detail = ev['詳細說明'] || '';
+  const hasSchedule = ev['賽程連結'] || '';
 
-  const tags = [];
-  const repeatType = ev['重複類型'] || '';
-  if (isLive) tags.push('<span class="tag tag-live">● 進行中</span>');
-  else if (repeatType === '每週') tags.push('<span class="tag tag-weekly">每週</span>');
-  else if (repeatType === '每月') tags.push('<span class="tag tag-weekly">每月</span>');
-  if (isTW) tags.push('<span class="tag tag-tw">台灣選手</span>');
-
-  // 日期處理
-  let dateStr = '';
-  if (repeatType === '每週' || repeatType === '每月') {
-    const nextDate = ev['下次舉辦日期'];
-    let nextStr = '';
-    if (nextDate) {
-      const d = nextDate instanceof Date ? nextDate : new Date(nextDate);
-      if (!isNaN(d.getTime())) {
-        nextStr = `${d.getMonth()+1}/${d.getDate()}`;
-      }
-    }
-    dateStr = nextStr ? `${repeatType} · 下次：${nextStr}（台灣時間）` : repeatType;
-  } else {
-    dateStr = formatDateRange(ev['開始日期'], ev['結束日期']);
-  }
-
-  const detailSection = detail ? `
-        <div class="detail-link" onclick="toggleExpand(this)">
-          詳細 <i class="detail-arrow">›</i>
+  let detailSection = '';
+  if (detail) {
+    detailSection = `
+      <div class="detail-link" onclick="toggleExpand(this)">
+        詳細資訊 <i class="detail-arrow">›</i>
+      </div>
+      <div class="event-expand">
+        <div class="event-expand-inner">
+          <p>${parseLinks(detail)}</p>
         </div>
-        <div class="event-expand">
-          <div class="event-expand-inner">
-            <p>${parseLinks(detail)}</p>
-          </div>
-        </div>` : '';
-
-  const scheduleBtn = hasSchedule
-    ? `<a href="${hasSchedule}" target="_blank"><button class="btn-schedule">賽程表</button></a>`
-    : '';
+      </div>`;
+  }
+  const scheduleBtn = hasSchedule ? `<a href="${hasSchedule}" target="_blank"><button class="btn-schedule">賽程表</button></a>` : '';
 
   return `
-      <div class="event-card" data-tw="${isTW}">
-        <div class="event-card-top">
-          <div class="event-card-left">
-            <div class="event-tags">${tags.join('')}</div>
-            <div class="event-name">${ev['名稱'] || ''}</div>
-            <div class="event-date">${dateStr}</div>
-            ${shortDesc ? `<div class="event-desc">${shortDesc}</div>` : ''}
-          </div>
-          ${scheduleBtn}
+    <div class="event-card" data-tw="${isTW}">
+      <div class="event-card-top">
+        <div class="event-card-left">
+          <div class="event-tags">${tags.join('')}</div>
+          <div class="event-name">${ev['名稱'] || ''}</div>
+          <div class="event-date">${dateStr}</div>
+          ${shortDesc ? `<div class="event-desc">${shortDesc}</div>` : ''}
         </div>
-        ${detailSection}
-      </div>`;
+        ${scheduleBtn}
+      </div>
+      ${detailSection}
+    </div>`;
 }
 
-// 月份標籤（跨年時顯示年份）
 function getMonthLabel(dateVal) {
   if (!dateVal) return '';
   const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
   if (isNaN(d.getTime())) return '';
   const thisYear = new Date().getFullYear();
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  return year !== thisYear ? `${year} 年 ${month} 月` : `${month} 月`;
+  return d.getFullYear() !== thisYear ? `${d.getFullYear()} 年 ${d.getMonth() + 1} 月` : `${d.getMonth() + 1} 月`;
 }
 
-// 月份分組 key（用於比較是否同一個月）
 function getMonthKey(dateVal) {
   if (!dateVal) return '';
   const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
@@ -1737,192 +1594,102 @@ function getMonthKey(dateVal) {
   return `${d.getFullYear()}-${d.getMonth()}`;
 }
 
-
-// ── 遊戲名稱對應 chip filter key ──
 const GAME_KEY_MAP = {
-  'Street Fighter 6': 'sf6',
-  'SF6': 'sf6',
-  'The King of Fighters XV': 'kof',
-  'KOF XV': 'kof',
-  'Fatal Fury: City of the Wolves': 'cotw',
-  'CotW': 'cotw',
-  '餓狼': 'cotw',
-  'Guilty Gear: Strive': 'ggst',
-  'GGST': 'ggst',
-  'Granblue Fantasy Versus: Rising': 'gbvsr',
-  'GBVSR': 'gbvsr',
-  'Tekken 8': 'tk8',
-  'TK8': 'tk8',
-  '鐵拳 8': 'tk8',
+  'Street Fighter 6': 'sf6', 'SF6': 'sf6',
+  'The King of Fighters XV': 'kof', 'KOF XV': 'kof',
+  'Fatal Fury: City of the Wolves': 'cotw', 'CotW': 'cotw', '餓狼': 'cotw',
+  'Guilty Gear: Strive': 'ggst', 'GGST': 'ggst',
+  'Granblue Fantasy Versus: Rising': 'gbvsr', 'GBVSR': 'gbvsr',
+  'Tekken 8': 'tk8', 'TK8': 'tk8', '鐵拳 8': 'tk8',
 };
 
 function getGameKey(gameName) {
   if (!gameName) return 'other';
-  for (const [key, val] of Object.entries(GAME_KEY_MAP)) {
-    if (gameName.includes(key)) return val;
+  for (const [k, v] of Object.entries(GAME_KEY_MAP)) {
+    if (gameName.toLowerCase().includes(k.toLowerCase())) return v;
   }
   return 'other';
 }
 
-// 產生 offline 直播卡片 HTML
-function renderOfflineCard(streamer) {
-  const name = streamer['頻道名稱'] || '';
-  const game = streamer['主要遊戲'] || '';
-  const platform = streamer['平台'] || 'Twitch';
-  const twitchId = streamer['Twitch ID'] || '';
-  const gameKey = getGameKey(game);
-
-  const profileUrl = twitchId
-    ? `https://www.twitch.tv/${twitchId}`
-    : (streamer['YouTube ID'] ?`https://www.youtube.com/channel/${streamer['YouTube ID']}`
- : '#');
-
-  return `
-    <a href="${profileUrl}" target="_blank" style="text-decoration:none;">
-      <div class="live-card" data-game="${gameKey}" style="opacity:0.45;">
-        <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:20px; opacity:0.4;">
-            ${platform === 'YouTube' ? '▶' : '◉'}
-          </div>
-        </div>
-        <div class="live-info">
-          <div class="live-name">${name}</div>
-          <div class="live-game">${game}</div>
-          <div class="live-platform"><span>${platform}</span></div>
-        </div>
-      </div>
-    </a>`;
+function gameToKey(gameName) {
+  return getGameKey(gameName);
 }
 
-// ── 載入直播狀態（實況名單 + YouTube API）──
-async function loadLiveStatus() {
-  try {
-    const streamers = await fetchSheet('實況名單');
+// ════════════════════════════════════════════
+// 直播狀態處理中心（串接 GAS 每 15 分鐘產出的新分頁）
+// ════════════════════════════════════════════
 
-    const visible = streamers.filter(s =>
-      s['顯示'] !== false && s['顯示'] !== 'FALSE' && s['顯示'] !== 0
-    );
-
-    // 取出有 YouTube ID 的頻道
-    const ytStreamers = visible.filter(s => s['YouTube ID'] && s['平台'] !== 'Twitch');
-    const ytIds = ytStreamers.map(s => String(s['YouTube ID']).trim()).filter(Boolean);
-
-    // 查 YouTube 直播狀態
-    let ytLiveMap = {};
-    if (ytIds.length > 0 && YOUTUBE_API_KEY !== 'YOUR_YOUTUBE_API_KEY') {
-      ytLiveMap = await fetchYoutubeLiveStatus(ytIds);
-    }
-
-    // 分成在線和離線
-    const liveStreamers = [];
-    const offlineStreamers = [];
-
-    visible.forEach(s => {
-      const ytId = String(s['YouTube ID'] || '').trim();
-      const isYTLive = ytId && ytLiveMap[ytId]?.isLive;
-
-      if (isYTLive) {
-        liveStreamers.push({ ...s, _liveData: ytLiveMap[ytId], _platform: 'YouTube' });
-      } else {
-        offlineStreamers.push(s);
-      }
-    });
-
-    // 隨機排序兩個列表
-    [liveStreamers, offlineStreamers].forEach(arr => {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-    });
-
-    // ── 渲染 LIVE 區塊 ──
-    renderLiveSection(liveStreamers);
-
-    // ── 渲染 Offline ──
-    renderOfflineSection(offlineStreamers, visible.length);
-
-  } catch(e) {
-    console.error('載入直播狀態失敗', e);
-  }
-}
-
+// 產生在線實況主卡片 HTML
 function renderLiveCard(s) {
-  const name = s['頻道名稱'] || s['Twitch ID'] || s['YouTube ID'] || '未知頻道';
-  const live = s._liveData || {};
-  const game = live.game || s['主要遊戲'] || '';
-  const platform = s._platform || s['平台'] || '';
-  const ytId = String(s['YouTube ID'] || '').trim();
-  const profileUrl = ytId ? `https://www.youtube.com/watch?v=${live.videoId || ''}` : '#';
-  const thumbUrl = live.thumbnail || '';
+  const twitchId = s['Twitch ID'] || '';
+  const name = s['頻道名稱'] || twitchId; // 表格若沒填暱稱，預設秀 ID
+  const title = s['直播標題'] || '實況中';
+  const game = s['當前遊戲'] || '未知遊戲';
+  const viewers = s['觀看人數'] || 0;
+  const thumbUrl = s['縮圖 URL'] || '';
+  const avatarUrl = s['頭貼 URL'] || '';
+  const profileUrl = `https://www.twitch.tv/${twitchId}`;
 
   return `
     <a href="${profileUrl}" target="_blank" style="text-decoration:none;">
-      <div class="live-card" data-game="${gameToKey(s['主要遊戲'])}">
+      <div class="live-card" data-game="${gameToKey(game)}">
         <div class="live-thumb">
-          ${thumbUrl
-            ? `<img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover;">`
-            : `<div class="live-thumb-placeholder" style="font-size:24px;">🎮</div>`}
+          ${thumbUrl ? `<img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover;">` : `<div class="live-thumb-placeholder" style="font-size:24px;">🎮</div>`}
           <div class="live-dot">LIVE</div>
         </div>
         <div class="live-info">
           <div class="live-name">${name}</div>
-          <div class="live-game">${game}</div>
-          <div class="live-platform"><span>${platform}</span></div>
+          <div class="live-game" style="color:var(--text); font-weight:500; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+          <div class="live-game" style="font-size:11px;">${game}</div>
+          <div class="live-platform">
+            ${avatarUrl ? `<div class="live-avatar"><img src="${avatarUrl}"></div>` : ''}
+            <span>Twitch</span>
+            <span style="margin-left: 8px; color: var(--live-red); font-weight:600;">👁️ ${viewers}</span>
+          </div>
         </div>
       </div>
     </a>`;
 }
 
+// 產生離線實況主卡片 HTML
 function renderOfflineCard(s) {
-  const name = s['頻道名稱'] || s['Twitch ID'] || s['YouTube ID'] || '未知頻道';
-  const game = s['主要遊戲'] || '';
-  const platform = s['平台'] || '';
-  const ytId = String(s['YouTube ID'] || '').trim();
-  const twId = String(s['Twitch ID'] || '').trim();
-  let profileUrl = '#';
-  if (twId) profileUrl = `https://www.twitch.tv/${twId}`;
-  else if (ytId) profileUrl = `https://www.youtube.com/@${ytId}`;
+  const twitchId = s['Twitch ID'] || '';
+  const name = s['頻道名稱'] || twitchId;
+  const profileUrl = `https://www.twitch.tv/${twitchId}`;
+  const avatarUrl = s['頭貼 URL'] || '';
 
   return `
     <a href="${profileUrl}" target="_blank" style="text-decoration:none;">
-      <div class="live-card" data-game="${gameToKey(game)}" style="opacity:0.45;">
+      <div class="live-card" data-game="other" style="opacity:0.55;">
         <div class="live-thumb">
-          <div class="live-thumb-placeholder" style="font-size:20px;opacity:0.35;">🎮</div>
+          <div class="live-thumb-placeholder" style="font-size:20px; opacity:0.4;">🎮</div>
         </div>
         <div class="live-info">
           <div class="live-name">${name}</div>
-          <div class="live-game">${game}</div>
-          <div class="live-platform"><span>${platform}</span></div>
+          <div class="live-platform">
+            ${avatarUrl ? `<div class="live-avatar" style="filter:grayscale(100%); opacity:0.6;"><img src="${avatarUrl}"></div>` : ''}
+            <span>Twitch</span>
+            <span style="margin-left:6px; color:var(--text3);">離線</span>
+          </div>
         </div>
       </div>
     </a>`;
 }
 
-function gameToKey(game) {
-  if (!game) return 'other';
-  const g = String(game).toLowerCase();
-  if (g.includes('street fighter 6') || g.includes('sf6') || g.includes('快打旋風6') || g.includes('sf 6')) return 'sf6';
-  if (g.includes('tekken') || g.includes('鐵拳')) return 'tk8';
-  if (g.includes('guilty gear') || g.includes('ggst')) return 'ggst';
-  if (g.includes('granblue') || g.includes('gbvsr')) return 'gbvsr';
-  if (g.includes('king of fighters') || g.includes('kof')) return 'kof';
-  if (g.includes('fatal fury') || g.includes('餓狼') || g.includes('cotw')) return 'cotw';
-  return 'other';
-}
-
+// ── 渲染直播頁（在線列表 + 同步更新首頁橫向滾動區塊） ──
 function renderLiveSection(liveStreamers) {
-  // 直播頁 LIVE 區塊
   const livePage = document.querySelector('#page-live .content');
   if (!livePage) return;
 
-  // 移除舊的假資料 live cards（不在 offline-list 裡的）
-  livePage.querySelectorAll('.live-card:not(.offline-list .live-card)').forEach(c => c.closest('a') ? c.closest('a').remove() : c.remove());
+  // 移除舊的假資料
+  livePage.querySelectorAll('.live-card:not(#offline-list .live-card)').forEach(c => {
+    const parentA = c.closest('a');
+    if (parentA) parentA.remove();
+    else c.remove();
+  });
 
   const offlineSection = document.getElementById('offline-section');
-
   if (liveStreamers.length === 0) {
-    // 沒有人在線
     const emptyMsg = document.createElement('div');
     emptyMsg.className = 'loading-placeholder';
     emptyMsg.style.padding = '20px 18px';
@@ -1937,8 +1704,39 @@ function renderLiveSection(liveStreamers) {
       else livePage.appendChild(card);
     });
   }
+
+  // 同步連動更新首頁的「其他直播」橫向滾動版面
+  const homeScroll = document.getElementById('home-live-scroll');
+  const homeScrollSection = document.getElementById('home-live-scroll-section');
+  if (homeScroll && homeScrollSection) {
+    if (liveStreamers.length === 0) {
+      homeScrollSection.style.display = 'none';
+    } else {
+      homeScrollSection.style.display = 'block';
+      homeScroll.innerHTML = liveStreamers.map(s => {
+        const twitchId = s['Twitch ID'] || '';
+        const name = s['頻道名稱'] || twitchId;
+        const game = s['當前遊戲'] || '未知遊戲';
+        const thumbUrl = s['縮圖 URL'] || '';
+        const profileUrl = `https://www.twitch.tv/${twitchId}`;
+        return `
+          <a href="${profileUrl}" target="_blank" style="text-decoration:none; color:inherit;">
+            <div class="live-scroll-card">
+              <div class="live-scroll-thumb">
+                ${thumbUrl ? `<img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover;">` : '<div class="live-thumb-placeholder" style="font-size:18px;">🎮</div>'}
+              </div>
+              <div class="live-scroll-info">
+                <div class="live-scroll-name">${name}</div>
+                <div class="live-scroll-game">${game}</div>
+              </div>
+            </div>
+          </a>`;
+      }).join('');
+    }
+  }
 }
 
+// ── 渲染離線列表 ──
 function renderOfflineSection(offlineStreamers, totalCount) {
   const toggleLabel = document.querySelector('.offline-toggle-label');
   if (toggleLabel) {
@@ -1950,78 +1748,73 @@ function renderOfflineSection(offlineStreamers, totalCount) {
   }
 }
 
-// ── 載入實況名單 ──
-async function loadStreamers() {
+// ── 主驅動程式：改為撈取新分頁「直播狀態」 ──
+async function loadLiveStatus() {
   try {
-    const streamers = await fetchSheet('實況名單');
-    const visible = streamers.filter(s =>
-      s['顯示'] !== false && s['顯示'] !== 'FALSE' && s['顯示'] !== 0
-    );
+    const streamers = await fetchSheet('直播狀態');
+    const liveStreamers = [];
+    const offlineStreamers = [];
 
-    // 隨機排序
-    for (let i = visible.length - 1; i > 0; i--) {
+    streamers.forEach(s => {
+      if (!s['Twitch ID']) return; // 過濾空白列
+
+      const status = s['是否在線'];
+      const isLive = (status === '在線' || status === '開台ing' || status === 'TRUE' || status === true);
+
+      if (isLive) {
+        liveStreamers.push(s);
+      } else {
+        offlineStreamers.push(s);
+      }
+    });
+
+    // 隨機排序打亂順序，讓首頁和列表每次進來更有變化
+    for (let i = liveStreamers.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [visible[i], visible[j]] = [visible[j], visible[i]];
+      [liveStreamers[i], liveStreamers[j]] = [liveStreamers[j], liveStreamers[i]];
+    }
+    for (let i = offlineStreamers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [offlineStreamers[i], offlineStreamers[j]] = [offlineStreamers[j], offlineStreamers[i]];
     }
 
-    const offlineList = document.getElementById('offline-list');
-    const offlineCount = document.getElementById('offline-count');
-
-    if (offlineList) {
-      offlineList.innerHTML = visible.map(s => renderOfflineCard(s)).join('');
-    }
-    if (offlineCount) {
-      offlineCount.textContent = `(${visible.length})`;
-    }
-
+    renderLiveSection(liveStreamers);
+    renderOfflineSection(offlineStreamers, streamers.length);
   } catch(e) {
-    console.error('載入實況名單失敗', e);
-    const el = document.getElementById('offline-list');
-    if (el) el.innerHTML = '<div class="error-placeholder">資料載入失敗</div>';
+    console.error('載入直播狀態失敗', e);
   }
 }
 
-// ── 載入首頁賽事 ──
+// 原功能保留相容性留空
+async function loadStreamers() {}
+
+// ── 載入首頁賽事資料 ──
 async function loadHomeEvents() {
   try {
     const events = await fetchSheet('賽事');
+    renderHomeFeatured(events);
+
     const today = new Date();
     today.setHours(0,0,0,0);
 
-    // 過濾顯示欄位
-    const visible = events.filter(ev =>
-      ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
-    );
-
-    // 現正進行中
-    const liveEvs = visible.filter(ev =>
-      ev['進行中'] === true || ev['進行中'] === 'TRUE'
-    );
+    const liveEvs = events.filter(e => e['進行中'] === true || e['進行中'] === 'TRUE');
     const liveContainer = document.getElementById('home-live-events');
     if (liveContainer) {
       if (liveEvs.length === 0) {
-        liveContainer.innerHTML = '<div class="loading-placeholder" style="padding:12px 18px;">目前沒有進行中的賽事</div>';
+        liveContainer.innerHTML = '<div class="loading-placeholder" style="padding:12px 18px;">目前沒有進行中的大賽</div>';
       } else {
         liveContainer.innerHTML = liveEvs.map(ev => renderEventCard(ev, false)).join('');
       }
     }
 
-    // 近期賽事（焦點大賽，未來，最多4筆，依日期排序）
-    const upcomingEvs = visible
-      .filter(ev => {
-        const cat = ev['分類'] || '';
-        const isLive = ev['進行中'] === true || ev['進行中'] === 'TRUE';
-        if (isLive) return false;
-        if (cat !== '焦點大賽') return false;
-        const end = ev['結束日期'] instanceof Date ? ev['結束日期'] : (ev['結束日期'] ? new Date(ev['結束日期']) : null);
-        return !end || end >= today;
-      })
-      .sort((a, b) => {
-        const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
-        const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
-        return da - db;
-      })
-      .slice(0, 4);
+    const upcomingEvs = events.filter(e => {
+      const sd = e['開始日期'] instanceof Date ? e['開始日期'] : new Date(e['開始日期'] || 0);
+      return sd >= today && (e['進行中'] !== true && e['進行中'] !== 'TRUE');
+    }).sort((a,b) => {
+      const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
+      const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
+      return da - db;
+    }).slice(0, 4);
 
     const upcomingContainer = document.getElementById('home-upcoming-events');
     if (upcomingContainer) {
@@ -2033,83 +1826,72 @@ async function loadHomeEvents() {
     }
   } catch(e) {
     console.error('載入首頁賽事失敗', e);
-    const containers = ['home-live-events', 'home-upcoming-events'];
-    containers.forEach(id => {
+    ['home-live-events', 'home-upcoming-events'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '<div class="error-placeholder">資料載入失敗，請稍後再試</div>';
     });
   }
 }
 
-// ── 載入賽事頁 ──
+// ── 載入賽事頁資料 ──
 async function loadEventsPage() {
   try {
     const events = await fetchSheet('賽事');
     const today = new Date();
     today.setHours(0,0,0,0);
-
-    const visible = events.filter(ev =>
-      ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
-    );
-
-    // 焦點大賽（依月份分組）
-    const featured = visible.filter(ev => {
-      const cat = ev['分類'] || '';
-      const end = ev['結束日期'] ? new Date(ev['結束日期']) : null;
-      const valid = !end || end >= today;
-      return cat === '焦點大賽' && valid;
+    
+    const visible = events.filter(e => e['顯示'] !== false && e['顯示'] !== 'FALSE' && e['顯示'] !== 0);
+    const featured = visible.filter(e => e['分類'] === '焦點大賽');
+    
+    featured.sort((a,b) => {
+      const isALive = a['進行中'] === true || a['進行中'] === 'TRUE';
+      const isBLive = b['進行中'] === true || b['進行中'] === 'TRUE';
+      if (isALive && !isBLive) return -1;
+      if (!isALive && isBLive) return 1;
+      const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
+      const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
+      return da - db;
     });
 
-    const featuredContainer = document.getElementById('events-featured');
-    if (featuredContainer) {
+    const featContainer = document.getElementById('events-featured-cards');
+    if (featContainer) {
       if (featured.length === 0) {
-        featuredContainer.innerHTML = '<div class="loading-placeholder">目前沒有焦點大賽</div>';
+        featContainer.innerHTML = '<div class="loading-placeholder">目前沒有焦點大賽</div>';
       } else {
-        // 依開始日期排序（由近到遠）
-        featured.sort((a, b) => {
-          const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
-          const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
-          return da - db;
-        });
-        // 依年月分組
+        let lastMonthKey = '';
         let html = '';
-        let currentKey = '';
         featured.forEach(ev => {
-          const key = getMonthKey(ev['開始日期']);
-          if (key && key !== currentKey) {
-            html += `<div class="month-label">${getMonthLabel(ev['開始日期'])}</div>`;
-            currentKey = key;
+          const isLive = ev['進行中'] === true || ev['進行中'] === 'TRUE';
+          if (isLive) {
+            html += renderEventCard(ev, false);
+          } else {
+            const mKey = getMonthKey(ev['開始日期']);
+            if (mKey !== lastMonthKey) {
+              html += `<div class="month-label">${getMonthLabel(ev['開始日期'])}</div>`;
+              lastMonthKey = mKey;
+            }
+            html += renderEventCard(ev, false);
           }
-          html += renderEventCard(ev, false);
         });
-        featuredContainer.innerHTML = html;
+        featContainer.innerHTML = html;
       }
     }
 
-    // 社群&聯賽
-    const community = visible.filter(ev => {
-      const cat = ev['分類'] || '';
-      return cat === '社群' || cat === '聯賽';
-    });
-
+    const community = visible.filter(e => e['分類'] === '社群賽事' || e['分類'] === '聯賽' || e['分類'] === '社群');
     const commContainer = document.getElementById('events-community-cards');
     if (commContainer) {
       const leagues = community.filter(ev => ev['分類'] === '聯賽');
-      const socials = community.filter(ev => ev['分類'] === '社群');
-
+      const socials = community.filter(ev => ev['分類'] === '社群' || ev['分類'] === '社群賽事');
       let html = '';
       if (leagues.length > 0) {
         html += leagues.map(ev => renderEventCard(ev, false)).join('');
       }
-      // 社群子標題
       const socialSection = document.getElementById('events-social-cards');
       if (socialSection) {
-        socialSection.innerHTML = socials.map(ev => renderEventCard(ev, false)).join('') ||
-          '<div class="loading-placeholder" style="padding:12px 18px;">目前沒有社群賽事</div>';
+        socialSection.innerHTML = socials.map(ev => renderEventCard(ev, false)).join('') || '<div class="loading-placeholder" style="padding:12px 18px;">目前沒有社群賽事</div>';
       }
       commContainer.innerHTML = html || '<div class="loading-placeholder" style="padding:12px 18px;">目前沒有聯賽</div>';
     }
-
   } catch(e) {
     console.error('載入賽事頁失敗', e);
     const el = document.getElementById('events-featured');
@@ -2117,28 +1899,20 @@ async function loadEventsPage() {
   }
 }
 
-// ── 初始化 ──
+// ── DOM 載入完畢初始化 ──
 document.addEventListener('DOMContentLoaded', function() {
-  // Headroom
   document.querySelectorAll('.page').forEach(function(page) {
     var contentEl = page.querySelector('.content');
     var header = page.querySelector('header');
     if (contentEl && header) setupHeadroom(contentEl, header);
   });
-  // 初始頁面
-  initPageFromHash();
-  // 資料載入
-  loadHomeEvents();
-  loadEventsPage();
-  loadLiveStatus();
-  loadBanners();
-  loadHero();
-  loadBanners();
-  shuffleLiveCards();
-  // 瀏覽器上一頁/下一頁
-  window.addEventListener('popstate', initPageFromHash);
-});
 
+  // 循序載入所有試算表分頁
+  loadBanners();
+  loadHomeEvents();
+  loadLiveStatus();
+  loadEventsPage();
+});
 </script>
 </body>
 </html>
