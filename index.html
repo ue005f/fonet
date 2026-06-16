@@ -1540,6 +1540,41 @@ async function loadBanners() {
 const SHEETS_ID = '1MBU9FQYsPqEwSgdAjmfxzOETK8vmBPY_JeNkP6vNgCw';
 const YOUTUBE_API_KEY = 'AIzaSyAR_Nr9dZw3HYqcoUcHPDeh1aGfIAdmu5Q'; // ← 填入你的 YouTube API 金鑰
 
+// ── YouTube API ──
+async function fetchYoutubeLiveStatus(channelIds) {
+  // 每次最多查 50 個頻道
+  const results = {};
+  const chunks = [];
+  for (let i = 0; i < channelIds.length; i += 50) {
+    chunks.push(channelIds.slice(i, i + 50));
+  }
+
+  for (const chunk of chunks) {
+    try {
+      const ids = chunk.join(',');
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${ids}&eventType=live&type=video&key=${YOUTUBE_API_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      // 有出現在結果裡的頻道就是在直播
+      (data.items || []).forEach(item => {
+        const chId = item.snippet.channelId;
+        results[chId] = {
+          isLive: true,
+          title: item.snippet.title || '',
+          game: item.snippet.description || '',
+          thumbnail: item.snippet.thumbnails?.medium?.url || '',
+          videoId: item.id.videoId || '',
+          channelTitle: item.snippet.channelTitle || '',
+        };
+      });
+    } catch(e) {
+      console.error('YouTube API error:', e);
+    }
+  }
+  return results;
+}
+
 // 讀取 Sheets 某個分頁的所有資料
 async function fetchSheet(sheetName) {
   const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
@@ -1739,6 +1774,162 @@ function renderOfflineCard(streamer) {
     </a>`;
 }
 
+// ── 載入直播狀態（實況名單 + YouTube API）──
+async function loadLiveStatus() {
+  try {
+    const streamers = await fetchSheet('實況名單');
+
+    const visible = streamers.filter(s =>
+      s['顯示'] !== false && s['顯示'] !== 'FALSE' && s['顯示'] !== 0
+    );
+
+    // 取出有 YouTube ID 的頻道
+    const ytStreamers = visible.filter(s => s['YouTube ID'] && s['平台'] !== 'Twitch');
+    const ytIds = ytStreamers.map(s => String(s['YouTube ID']).trim()).filter(Boolean);
+
+    // 查 YouTube 直播狀態
+    let ytLiveMap = {};
+    if (ytIds.length > 0 && YOUTUBE_API_KEY !== 'YOUR_YOUTUBE_API_KEY') {
+      ytLiveMap = await fetchYoutubeLiveStatus(ytIds);
+    }
+
+    // 分成在線和離線
+    const liveStreamers = [];
+    const offlineStreamers = [];
+
+    visible.forEach(s => {
+      const ytId = String(s['YouTube ID'] || '').trim();
+      const isYTLive = ytId && ytLiveMap[ytId]?.isLive;
+
+      if (isYTLive) {
+        liveStreamers.push({ ...s, _liveData: ytLiveMap[ytId], _platform: 'YouTube' });
+      } else {
+        offlineStreamers.push(s);
+      }
+    });
+
+    // 隨機排序兩個列表
+    [liveStreamers, offlineStreamers].forEach(arr => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    });
+
+    // ── 渲染 LIVE 區塊 ──
+    renderLiveSection(liveStreamers);
+
+    // ── 渲染 Offline ──
+    renderOfflineSection(offlineStreamers, visible.length);
+
+  } catch(e) {
+    console.error('載入直播狀態失敗', e);
+  }
+}
+
+function renderLiveCard(s) {
+  const name = s['頻道名稱'] || s['Twitch ID'] || s['YouTube ID'] || '未知頻道';
+  const live = s._liveData || {};
+  const game = live.game || s['主要遊戲'] || '';
+  const platform = s._platform || s['平台'] || '';
+  const ytId = String(s['YouTube ID'] || '').trim();
+  const profileUrl = ytId ? `https://www.youtube.com/watch?v=${live.videoId || ''}` : '#';
+  const thumbUrl = live.thumbnail || '';
+
+  return `
+    <a href="${profileUrl}" target="_blank" style="text-decoration:none;">
+      <div class="live-card" data-game="${gameToKey(s['主要遊戲'])}">
+        <div class="live-thumb">
+          ${thumbUrl
+            ? `<img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover;">`
+            : `<div class="live-thumb-placeholder" style="font-size:24px;">🎮</div>`}
+          <div class="live-dot">LIVE</div>
+        </div>
+        <div class="live-info">
+          <div class="live-name">${name}</div>
+          <div class="live-game">${game}</div>
+          <div class="live-platform"><span>${platform}</span></div>
+        </div>
+      </div>
+    </a>`;
+}
+
+function renderOfflineCard(s) {
+  const name = s['頻道名稱'] || s['Twitch ID'] || s['YouTube ID'] || '未知頻道';
+  const game = s['主要遊戲'] || '';
+  const platform = s['平台'] || '';
+  const ytId = String(s['YouTube ID'] || '').trim();
+  const twId = String(s['Twitch ID'] || '').trim();
+  let profileUrl = '#';
+  if (twId) profileUrl = `https://www.twitch.tv/${twId}`;
+  else if (ytId) profileUrl = `https://www.youtube.com/@${ytId}`;
+
+  return `
+    <a href="${profileUrl}" target="_blank" style="text-decoration:none;">
+      <div class="live-card" data-game="${gameToKey(game)}" style="opacity:0.45;">
+        <div class="live-thumb">
+          <div class="live-thumb-placeholder" style="font-size:20px;opacity:0.35;">🎮</div>
+        </div>
+        <div class="live-info">
+          <div class="live-name">${name}</div>
+          <div class="live-game">${game}</div>
+          <div class="live-platform"><span>${platform}</span></div>
+        </div>
+      </div>
+    </a>`;
+}
+
+function gameToKey(game) {
+  if (!game) return 'other';
+  const g = String(game).toLowerCase();
+  if (g.includes('street fighter 6') || g.includes('sf6') || g.includes('快打旋風6') || g.includes('sf 6')) return 'sf6';
+  if (g.includes('tekken') || g.includes('鐵拳')) return 'tk8';
+  if (g.includes('guilty gear') || g.includes('ggst')) return 'ggst';
+  if (g.includes('granblue') || g.includes('gbvsr')) return 'gbvsr';
+  if (g.includes('king of fighters') || g.includes('kof')) return 'kof';
+  if (g.includes('fatal fury') || g.includes('餓狼') || g.includes('cotw')) return 'cotw';
+  return 'other';
+}
+
+function renderLiveSection(liveStreamers) {
+  // 直播頁 LIVE 區塊
+  const livePage = document.querySelector('#page-live .content');
+  if (!livePage) return;
+
+  // 移除舊的假資料 live cards（不在 offline-list 裡的）
+  livePage.querySelectorAll('.live-card:not(.offline-list .live-card)').forEach(c => c.closest('a') ? c.closest('a').remove() : c.remove());
+
+  const offlineSection = document.getElementById('offline-section');
+
+  if (liveStreamers.length === 0) {
+    // 沒有人在線
+    const emptyMsg = document.createElement('div');
+    emptyMsg.className = 'loading-placeholder';
+    emptyMsg.style.padding = '20px 18px';
+    emptyMsg.textContent = '目前沒有直播';
+    if (offlineSection) livePage.insertBefore(emptyMsg, offlineSection);
+  } else {
+    liveStreamers.forEach(s => {
+      const div = document.createElement('div');
+      div.innerHTML = renderLiveCard(s);
+      const card = div.firstElementChild;
+      if (offlineSection) livePage.insertBefore(card, offlineSection);
+      else livePage.appendChild(card);
+    });
+  }
+}
+
+function renderOfflineSection(offlineStreamers, totalCount) {
+  const toggleLabel = document.querySelector('.offline-toggle-label');
+  if (toggleLabel) {
+    toggleLabel.innerHTML = `OFFLINE <span style="color:var(--text3);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;">(${offlineStreamers.length})</span> <i class="offline-arrow">›</i>`;
+  }
+  const offlineList = document.getElementById('offline-list');
+  if (offlineList) {
+    offlineList.innerHTML = offlineStreamers.map(s => renderOfflineCard(s)).join('');
+  }
+}
+
 // ── 載入實況名單 ──
 async function loadStreamers() {
   try {
@@ -1919,7 +2110,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 資料載入
   loadHomeEvents();
   loadEventsPage();
-  loadStreamers();
+  loadLiveStatus();
   loadBanners();
   loadHero();
   loadBanners();
