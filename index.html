@@ -883,12 +883,12 @@
   .event-expand {
     overflow: hidden;
     max-height: 0;
-    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+    transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;
     opacity: 0;
     margin-top: 0;
   }
   .event-expand.open {
-    max-height: 200px;
+    max-height: 1000px; /* 夠大讓任何內容都能完整顯示 */
     opacity: 1;
     margin-top: 10px;
   }
@@ -897,10 +897,25 @@
     border-top: 1px solid rgba(255,255,255,0.06);
     font-size: 12px;
     color: var(--text2);
-    line-height: 1.6;
+    line-height: 1.7;
+    white-space: pre-line; /* 支援換行 */
   }
   .event-expand-inner p { margin-bottom: 6px; }
   .event-expand-inner p:last-child { margin-bottom: 0; }
+
+  /* 展開遮罩：點任何地方收起 */
+  .expand-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: none;
+  }
+  .expand-overlay.active { display: block; }
+
+  /* 展開時卡片有輕微高亮 */
+  .event-card.expanded {
+    border-color: rgba(168,85,247,0.25);
+  }
   .detail-link {
     display: flex;
     align-items: center;
@@ -1174,6 +1189,9 @@
     </nav>
   </div>
 
+  <!-- Expand overlay -->
+  <div class="expand-overlay" id="expand-overlay" onclick="closeAllExpands()"></div>
+
   <!-- Three-dot menu -->
   <div class="menu-overlay" id="menu-overlay" onclick="closeMenu(event)">
     <div class="menu-panel" onclick="event.stopPropagation()">
@@ -1331,9 +1349,36 @@ function switchHeroTab(tabEl, panelId) {
 
 function toggleExpand(linkEl) {
   const expand = linkEl.nextElementSibling;
+  const card = linkEl.closest('.event-card');
   const isOpen = expand.classList.contains('open');
-  expand.classList.toggle('open', !isOpen);
-  linkEl.classList.toggle('open', !isOpen);
+
+  if (isOpen) {
+    // 收起
+    closeAllExpands();
+  } else {
+    // 先收起其他所有展開的卡片
+    closeAllExpands();
+    // 展開這個
+    expand.classList.add('open');
+    linkEl.classList.add('open');
+    if (card) card.classList.add('expanded');
+    // 顯示遮罩
+    document.getElementById('expand-overlay').classList.add('active');
+    // 捲動讓卡片保持在視窗中
+    setTimeout(() => {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
+}
+
+function closeAllExpands() {
+  // 收起所有展開的卡片
+  document.querySelectorAll('.event-expand.open').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.detail-link.open').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.event-card.expanded').forEach(el => el.classList.remove('expanded'));
+  // 隱藏遮罩
+  const overlay = document.getElementById('expand-overlay');
+  if (overlay) overlay.classList.remove('active');
 }
 
 // ── Headroom: hide header on scroll down, show on scroll up ──
