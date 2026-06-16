@@ -1352,28 +1352,33 @@ function switchHeroTab(tabEl, panelId) {
   document.getElementById('hero-' + panelId).style.display = 'block';
 }
 
-function toggleExpand(linkEl) {
-  const expand = linkEl.nextElementSibling;
-  const card = linkEl.closest('.event-card');
-  const isOpen = expand.classList.contains('open');
-
+// 點卡片任何地方：收起時展開，展開時收起
+function handleCardClick(cardEl) {
+  const isOpen = cardEl.classList.contains('expanded');
   if (isOpen) {
-    closeExpand(card);
+    closeExpand(cardEl);
   } else {
-    // 先收起其他所有展開的卡片
     closeAllExpands();
-    // 展開
-    expand.classList.add('open');
-    linkEl.classList.add('open');
-    card.classList.add('expanded');
-    // 捲動讓卡片保持在視窗中
-    setTimeout(() => {
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 50);
-    // 點卡片任何地方收起
-    card._closeHandler = function() { closeExpand(card); };
-    card.addEventListener('click', card._closeHandler);
+    openExpand(cardEl);
   }
+}
+
+// 點「詳細」按鈕也觸發同樣邏輯
+function toggleExpand(linkEl) {
+  const card = linkEl.closest('.event-card');
+  handleCardClick(card);
+}
+
+function openExpand(card) {
+  const expand = card.querySelector('.event-expand');
+  const link = card.querySelector('.detail-link');
+  if (!expand) return;
+  expand.classList.add('open');
+  if (link) link.classList.add('open');
+  card.classList.add('expanded');
+  setTimeout(() => {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
 }
 
 function closeExpand(card) {
@@ -1382,10 +1387,6 @@ function closeExpand(card) {
   if (expand) expand.classList.remove('open');
   if (link) link.classList.remove('open');
   card.classList.remove('expanded');
-  if (card._closeHandler) {
-    card.removeEventListener('click', card._closeHandler);
-    card._closeHandler = null;
-  }
 }
 
 function closeAllExpands() {
@@ -1720,7 +1721,7 @@ function renderEventCard(ev, isTwFiltered) {
     : '';
 
   return `
-      <div class="event-card" data-tw="${isTW}">
+      <div class="event-card" data-tw="${isTW}" onclick="handleCardClick(this)" style="cursor:pointer;">
         <div class="event-card-top">
           <div class="event-card-left">
             <div class="event-tags">${tags.join('')}</div>
