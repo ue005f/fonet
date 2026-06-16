@@ -1542,36 +1542,55 @@ const YOUTUBE_API_KEY = 'AIzaSyAR_Nr9dZw3HYqcoUcHPDeh1aGfIAdmu5Q'; // ← 填入
 
 // ── YouTube API ──
 async function fetchYoutubeLiveStatus(channelIds) {
-  // 每次最多查 50 個頻道
   const results = {};
-  const chunks = [];
-  for (let i = 0; i < channelIds.length; i += 50) {
-    chunks.push(channelIds.slice(i, i + 50));
-  }
 
-  for (const chunk of chunks) {
+  // 一個頻道一個頻道查
+  for (const channelId of channelIds) {
     try {
-      const ids = chunk.join(',');
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${ids}&eventType=live&type=video&key=${YOUTUBE_API_KEY}`;
+      const url =
+        `https://www.googleapis.com/youtube/v3/search` +
+        `?part=snippet` +
+        `&channelId=${channelId}` +
+        `&eventType=live` +
+        `&type=video` +
+        `&key=${YOUTUBE_API_KEY}`;
+
       const res = await fetch(url);
-      if (!res.ok) continue;
+
+      // 顯示 API 錯誤
+      if (!res.ok) {
+        console.error(
+          "YouTube API error:",
+          res.status,
+          await res.text()
+        );
+        continue;
+      }
+
       const data = await res.json();
-      // 有出現在結果裡的頻道就是在直播
-      (data.items || []).forEach(item => {
-        const chId = item.snippet.channelId;
-        results[chId] = {
+
+      // debug：看 API 回傳什麼
+      console.log("Checking channel:", channelId, data);
+
+      // 有直播
+      if (data.items && data.items.length > 0) {
+        const item = data.items[0];
+
+        results[channelId] = {
           isLive: true,
-          title: item.snippet.title || '',
-          game: item.snippet.description || '',
-          thumbnail: item.snippet.thumbnails?.medium?.url || '',
-          videoId: item.id.videoId || '',
-          channelTitle: item.snippet.channelTitle || '',
+          title: item.snippet.title || "",
+          game: item.snippet.description || "",
+          thumbnail: item.snippet.thumbnails?.medium?.url || "",
+          videoId: item.id.videoId || "",
+          channelTitle: item.snippet.channelTitle || ""
         };
-      });
-    } catch(e) {
-      console.error('YouTube API error:', e);
+      }
+
+    } catch (e) {
+      console.error("YouTube fetch error:", e);
     }
   }
+
   return results;
 }
 
@@ -1755,7 +1774,8 @@ function renderOfflineCard(streamer) {
 
   const profileUrl = twitchId
     ? `https://www.twitch.tv/${twitchId}`
-    : (streamer['YouTube ID'] ? `https://www.youtube.com/@${streamer['YouTube ID']}` : '#');
+    : (streamer['YouTube ID'] ?`https://www.youtube.com/channel/${streamer['YouTube ID']}`
+ : '#');
 
   return `
     <a href="${profileUrl}" target="_blank" style="text-decoration:none;">
