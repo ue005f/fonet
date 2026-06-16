@@ -294,6 +294,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .live-title {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.8;
+  }
   .live-game {
     font-size: 12px;
     color: var(--text2);
@@ -1799,6 +1808,20 @@ async function loadLiveStatus() {
       }
     });
 
+    // 分出精選在線的頻道
+    const featuredLive = liveStreamers.filter(s =>
+      s['精選'] === true || s['精選'] === 'TRUE'
+    );
+    const otherLive = liveStreamers.filter(s =>
+      s['精選'] !== true && s['精選'] !== 'TRUE'
+    );
+
+    // Hero 區
+    updateHeroWithLive(featuredLive[0] || null);
+
+    // 其他直播橫向滑動（精選在線，排除 hero 那個）
+    updateHomeScroll(featuredLive.slice(1));
+
     renderLiveSection(liveStreamers);
     renderOfflineSection(offlineStreamers, visible.length);
 
@@ -1811,12 +1834,12 @@ function renderLiveCard(s) {
   const name = s['頻道名稱'] || s['Twitch ID'] || s['YouTube ID'] || '未知頻道';
   const status = s._status || {};
   const game = status['當前遊戲'] || s['主要遊戲'] || '';
+  const title = status['直播標題'] || '';
   const platform = status['平台'] || s['平台'] || '';
   const twitchId = String(s['Twitch ID'] || '').trim();
   const ytId = String(s['YouTube ID'] || '').trim();
   const thumbUrl = status['縮圖 URL'] || '';
 
-  // 決定連結
   let profileUrl = '#';
   if (platform === 'Twitch' && twitchId) profileUrl = `https://www.twitch.tv/${twitchId}`;
   else if (platform === 'YouTube' && ytId) profileUrl = `https://www.youtube.com/@${ytId}`;
@@ -1832,6 +1855,7 @@ function renderLiveCard(s) {
         </div>
         <div class="live-info">
           <div class="live-name">${name}</div>
+          ${title ? `<div class="live-title">${title}</div>` : ''}
           <div class="live-game">${game}</div>
           <div class="live-platform"><span>${platform}</span></div>
         </div>
@@ -1842,6 +1866,92 @@ function renderLiveCard(s) {
 
 
 
+
+// ── Hero 區：有精選直播時顯示直播，沒有時顯示賽事 ──
+function updateHeroWithLive(featuredStreamer) {
+  if (!featuredStreamer) return; // 沒有精選在線 → 保持賽事顯示（loadHero 已處理）
+
+  const status = featuredStreamer._status || {};
+  const name = featuredStreamer['頻道名稱'] || featuredStreamer['Twitch ID'] || '';
+  const game = status['當前遊戲'] || featuredStreamer['主要遊戲'] || '';
+  const title = status['直播標題'] || '';
+  const platform = status['平台'] || featuredStreamer['平台'] || '';
+  const twitchId = String(featuredStreamer['Twitch ID'] || '').trim();
+  const ytId = String(featuredStreamer['YouTube ID'] || '').trim();
+  const thumbUrl = status['縮圖 URL'] || '';
+
+  let streamUrl = '#';
+  if (platform === 'Twitch' && twitchId) streamUrl = `https://www.twitch.tv/${twitchId}`;
+  else if (platform === 'YouTube' && ytId) streamUrl = `https://www.youtube.com/@${ytId}`;
+
+  // 更新 hero 背景縮圖
+  const heroImg = document.querySelector('#hero-hot .hero-img');
+  if (heroImg && thumbUrl && thumbUrl !== '-') {
+    heroImg.style.backgroundImage = `url(${thumbUrl})`;
+    heroImg.style.backgroundSize = 'cover';
+    heroImg.style.backgroundPosition = 'center';
+    const artEl = document.getElementById('hero-art-text');
+    if (artEl) artEl.style.display = 'none';
+  }
+
+  const hotContent = document.getElementById('hero-hot-content');
+  if (hotContent) {
+    hotContent.innerHTML = `
+      <div class="hero-event-name">${name}</div>
+      <div class="hero-sub">
+        <span class="hero-live-badge">LIVE</span>
+        ${title || game}
+      </div>
+      ${title && game ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${game}</div>` : ''}
+      <div class="hero-cta">
+        <a href="${streamUrl}" target="_blank"><button class="btn-primary">前往${platform} →</button></a>
+        <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
+      </div>`;
+  }
+}
+
+// ── 其他直播橫向滑動：精選在線（排除 hero）──
+function updateHomeScroll(featuredStreamers) {
+  const section = document.getElementById('home-live-scroll-section');
+  const scroll = document.getElementById('home-live-scroll');
+  if (!section || !scroll) return;
+
+  if (featuredStreamers.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  scroll.innerHTML = featuredStreamers.map(s => {
+    const status = s._status || {};
+    const name = s['頻道名稱'] || s['Twitch ID'] || '';
+    const game = status['當前遊戲'] || s['主要遊戲'] || '';
+    const thumbUrl = status['縮圖 URL'] || '';
+    const platform = status['平台'] || s['平台'] || '';
+    const twitchId = String(s['Twitch ID'] || '').trim();
+    const ytId = String(s['YouTube ID'] || '').trim();
+    let url = '#';
+    if (platform === 'Twitch' && twitchId) url = `https://www.twitch.tv/${twitchId}`;
+    else if (platform === 'YouTube' && ytId) url = `https://www.youtube.com/@${ytId}`;
+
+    return `
+      <a href="${url}" target="_blank" style="text-decoration:none;">
+        <div class="live-scroll-card">
+          <div class="live-scroll-thumb">
+            ${thumbUrl && thumbUrl !== '-'
+              ? `<img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover;">`
+              : `<span style="font-size:28px;color:rgba(255,255,255,0.15);">🎮</span>`}
+            <div class="live-dot">LIVE</div>
+          </div>
+          <div class="live-scroll-info">
+            <div class="live-scroll-name">${name}</div>
+            <div class="live-scroll-game">${game}</div>
+          </div>
+        </div>
+      </a>`;
+  }).join('');
+
+  section.style.display = '';
+}
 
 function renderLiveSection(liveStreamers) {
   // 直播頁 LIVE 區塊
