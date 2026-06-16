@@ -1382,6 +1382,115 @@ function setupHeadroom(contentEl, headerEl) {
 
 
 // ════════════════════════════════════════════
+// ── Hero 區 ──
+async function loadHero() {
+  try {
+    const events = await fetchSheet('賽事');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const visible = events.filter(ev =>
+      ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
+    );
+
+    // 優先：進行中的焦點大賽
+    let hero = visible.find(ev =>
+      (ev['進行中'] === true || ev['進行中'] === 'TRUE') &&
+      ev['分類'] === '焦點大賽'
+    );
+
+    // 其次：最近即將到來的焦點大賽
+    if (!hero) {
+      const upcoming = visible
+        .filter(ev => {
+          const start = ev['開始日期'] instanceof Date ? ev['開始日期'] : new Date(ev['開始日期'] || 0);
+          return ev['分類'] === '焦點大賽' && start >= today;
+        })
+        .sort((a, b) => {
+          const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
+          const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
+          return da - db;
+        });
+      hero = upcoming[0];
+    }
+
+    // 沒有賽事 → 隱藏整個 Hero 區塊
+    if (!hero) {
+      const heroHot = document.getElementById('hero-hot');
+      const heroOfficial = document.getElementById('hero-official');
+      const heroTabs = document.querySelector('#page-home .tabs');
+      if (heroHot) heroHot.style.display = 'none';
+      if (heroOfficial) heroOfficial.style.display = 'none';
+      if (heroTabs) heroTabs.style.display = 'none';
+      return;
+    }
+
+    const isLive = hero['進行中'] === true || hero['進行中'] === 'TRUE';
+    const name = hero['名稱'] || '';
+    const dateStr = formatDateRange(hero['開始日期'], hero['結束日期']);
+    const shortDesc = hero['短介紹'] || '';
+    const scheduleUrl = hero['賽程連結'] || '';
+    const isTW = hero['台灣選手'] === true || hero['台灣選手'] === 'TRUE';
+
+    // 藝術字
+    const artEl = document.getElementById('hero-art-text');
+    if (artEl) artEl.textContent = name.split(' ')[0] || name;
+
+    // 熱門直播：沒有比賽時顯示「目前沒有觀賽派對」
+    const hotContent = document.getElementById('hero-hot-content');
+    if (hotContent) {
+      if (!isLive) {
+        // 即將到來的賽事
+        hotContent.innerHTML = `
+          <div class="hero-event-name">${name}</div>
+          <div class="hero-sub">
+            <span style="font-size:11px;color:var(--text2);">即將開始 · ${dateStr}</span>
+          </div>
+          ${shortDesc ? `<div style="font-size:12px;color:var(--text2);margin-top:4px;">${shortDesc}</div>` : ''}
+          <div class="hero-cta">
+            ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+            <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
+          </div>`;
+      } else {
+        // 進行中但沒有觀賽派對
+        hotContent.innerHTML = `
+          <div class="hero-event-name">${name}</div>
+          <div class="hero-sub">
+            <span class="hero-live-badge">LIVE</span>
+            目前沒有觀賽派對
+          </div>
+          <div class="hero-cta">
+            ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+            <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
+          </div>`;
+      }
+    }
+
+    // 賽事主台
+    const officialArt = document.getElementById('hero-official-art');
+    if (officialArt) officialArt.textContent = name.split(' ')[0] || name;
+
+    const officialContent = document.getElementById('hero-official-content');
+    if (officialContent) {
+      officialContent.innerHTML = `
+        <div class="hero-event-name">${name} 官方主台</div>
+        <div class="hero-sub">
+          ${isLive ? '<span class="hero-live-badge">LIVE</span>' : '<span style="font-size:11px;color:var(--text2);">即將開始</span>'}
+          官方賽事轉播
+        </div>
+        <div class="hero-cta">
+          ${scheduleUrl
+            ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">前往官方直播 →</button></a>`
+            : '<button class="btn-primary" style="opacity:0.4;cursor:default;">直播連結待定</button>'}
+          <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
+        </div>`;
+    }
+
+  } catch(e) {
+    console.error('載入 Hero 失敗', e);
+  }
+}
+
 // Banner 輪播
 // ════════════════════════════════════════════
 const bannerTimers = {};
