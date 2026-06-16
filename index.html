@@ -293,7 +293,7 @@
     min-width: 0;
   }
   .live-name {
-    font-size: 17px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     white-space: nowrap;
@@ -301,7 +301,7 @@
     text-overflow: ellipsis;
   }
   .live-card-title {
-    font-size: 15px;
+    font-size: 10px;
     color: var(--text2);
     margin-top: 2px;
     white-space: nowrap;
@@ -888,7 +888,7 @@
     margin-top: 0;
   }
   .event-expand.open {
-    max-height: none;
+    max-height: 200px;
     opacity: 1;
     margin-top: 10px;
   }
@@ -898,8 +898,6 @@
     font-size: 12px;
     color: var(--text2);
     line-height: 1.6;
-white-space: pre-wrap;
-word-break: break-word;
   }
   .event-expand-inner p { margin-bottom: 6px; }
   .event-expand-inner p:last-child { margin-bottom: 0; }
@@ -1193,9 +1191,8 @@ word-break: break-word;
       </button>
       <div class="menu-about" id="menu-about">
         <p>網頁架構與 Claude 合作完成</p>
-        <p>資料多為人工收集，有任何錯誤還請見諒</p>
-        <p>若內容造成您的困擾，請聯絡我們，我們將儘速為您處理</p>
-        <a href="#" class="menu-contact">✉ 聯絡我們</a>
+        <p>內容若造成困擾，聯絡我們後將儘速處理</p>
+        <a href="mailto:contact@623hub.tw" class="menu-contact">✉ 聯絡我們</a>
       </div>
     </div>
   </div>
@@ -1878,29 +1875,65 @@ function renderLiveCard(s) {
 
 
 // ── Hero 區：有精選直播時顯示直播，沒有時顯示賽事 ──
-function updateHeroWithLive(featuredStreamer) {
-  if (!featuredStreamer) return; // 沒有精選在線 → 保持賽事顯示（loadHero 已處理）
+// ── 協調函式：先顯示賽事 Hero，直播狀態載入後再更新 ──
+async function loadHeroThenLive() {
+  // 先載入賽事 Hero（快，讓使用者立刻看到東西）
+  await loadHero();
+
+  // 再載入直播狀態（需要查 Sheets 兩個分頁）
+  await loadLiveStatus();
+}
+
+async function updateHeroWithLive(featuredStreamer) {
+  if (!featuredStreamer) return; // 沒有精選在線 → 保持賽事顯示
 
   const status = featuredStreamer._status || {};
   const name = featuredStreamer['頻道名稱'] || featuredStreamer['Twitch ID'] || '';
   const game = status['當前遊戲'] || featuredStreamer['主要遊戲'] || '';
-  const title = status['直播標題'] || '';
+  const liveTitle = status['直播標題'] || '';
   const platform = status['平台'] || featuredStreamer['平台'] || '';
   const twitchId = String(featuredStreamer['Twitch ID'] || '').trim();
   const ytId = String(featuredStreamer['YouTube ID'] || '').trim();
   const thumbUrl = status['縮圖 URL'] || '';
+  const avatarUrl = status['頭貼 URL'] || '';
 
   let streamUrl = '#';
   if (platform === 'Twitch' && twitchId) streamUrl = `https://www.twitch.tv/${twitchId}`;
   else if (platform === 'YouTube' && ytId) streamUrl = `https://www.youtube.com/@${ytId}`;
 
-  // 更新 hero 背景縮圖
+  // 查目前進行中的賽事，判斷是否需要轉播權
+  let needsCopyright = false;
+  try {
+    const events = await fetchSheet('賽事');
+    const liveEvent = events.find(ev =>
+      ev['進行中'] === true || ev['進行中'] === 'TRUE'
+    );
+    if (liveEvent) {
+      needsCopyright = liveEvent['需要轉播權'] === true || liveEvent['需要轉播權'] === 'TRUE';
+    }
+  } catch(e) {
+    console.error('查詢轉播權失敗', e);
+  }
+
+  // 決定顯示縮圖還是頭貼
   const heroImg = document.querySelector('#hero-hot .hero-img');
-  if (heroImg && thumbUrl && thumbUrl !== '-') {
-    heroImg.style.backgroundImage = `url(${thumbUrl})`;
-    heroImg.style.backgroundSize = 'cover';
-    heroImg.style.backgroundPosition = 'center';
-    const artEl = document.getElementById('hero-art-text');
+  const artEl = document.getElementById('hero-art-text');
+
+  if (!needsCopyright && thumbUrl && thumbUrl !== '-') {
+    // 有賽事縮圖且不需轉播權 → 顯示直播縮圖
+    if (heroImg) {
+      heroImg.style.backgroundImage = `url(${thumbUrl})`;
+      heroImg.style.backgroundSize = 'cover';
+      heroImg.style.backgroundPosition = 'center';
+    }
+    if (artEl) artEl.style.display = 'none';
+  } else if (avatarUrl) {
+    // 需要轉播權或沒有縮圖 → 顯示頭貼
+    if (heroImg) {
+      heroImg.style.backgroundImage = `url(${avatarUrl})`;
+      heroImg.style.backgroundSize = 'cover';
+      heroImg.style.backgroundPosition = 'center';
+    }
     if (artEl) artEl.style.display = 'none';
   }
 
@@ -1910,9 +1943,9 @@ function updateHeroWithLive(featuredStreamer) {
       <div class="hero-event-name">${name}</div>
       <div class="hero-sub">
         <span class="hero-live-badge">LIVE</span>
-        ${title || game}
+        ${liveTitle || game}
       </div>
-      ${title && game ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${game}</div>` : ''}
+      ${liveTitle && game ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${game}</div>` : ''}
       <div class="hero-cta">
         <a href="${streamUrl}" target="_blank"><button class="btn-primary">前往${platform} →</button></a>
         <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
@@ -2179,13 +2212,12 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   // 初始頁面
   initPageFromHash();
-  // 資料載入
+  // 資料載入（順序重要）
   loadHomeEvents();
   loadEventsPage();
-  loadLiveStatus();
   loadBanners();
-  loadHero();
-  loadBanners();
+  // Hero 和直播狀態需要協調：先載入賽事 Hero，直播狀態載入後再覆蓋
+  loadHeroThenLive();
   shuffleLiveCards();
   // 瀏覽器上一頁/下一頁
   window.addEventListener('popstate', initPageFromHash);
