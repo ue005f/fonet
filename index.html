@@ -954,52 +954,13 @@
         </div>
       </div>
 
-      <!-- Other streams horizontal scroll -->
-      <div class="section-header">
-        <h2>其他直播</h2>
-        <span class="more-link">看更多 ›</span>
-      </div>
-      <div class="live-scroll">
-        <div class="live-scroll-card">
-          <div class="live-scroll-thumb">
-            🎮
-            <div class="live-dot">LIVE</div>
-          </div>
-          <div class="live-scroll-info">
-            <div class="live-scroll-name">石油王</div>
-            <div class="live-scroll-game">SF6</div>
-          </div>
+      <!-- Other streams horizontal scroll (hidden until live data available) -->
+      <div id="home-live-scroll-section" style="display:none;">
+        <div class="section-header">
+          <h2>其他直播</h2>
+          <span class="more-link" onclick="showPage('live')">看更多 ›</span>
         </div>
-        <div class="live-scroll-card">
-          <div class="live-scroll-thumb">
-            ⚡
-            <div class="live-dot">LIVE</div>
-          </div>
-          <div class="live-scroll-info">
-            <div class="live-scroll-name">阿良_りょう</div>
-            <div class="live-scroll-game">GGST</div>
-          </div>
-        </div>
-        <div class="live-scroll-card">
-          <div class="live-scroll-thumb">
-            🔥
-            <div class="live-dot">LIVE</div>
-          </div>
-          <div class="live-scroll-info">
-            <div class="live-scroll-name">板橋小結巴</div>
-            <div class="live-scroll-game">快打旋風 6</div>
-          </div>
-        </div>
-        <div class="live-scroll-card">
-          <div class="live-scroll-thumb">
-            💥
-            <div class="live-dot">LIVE</div>
-          </div>
-          <div class="live-scroll-info">
-            <div class="live-scroll-name">綾綾</div>
-            <div class="live-scroll-game">鐵拳 8</div>
-          </div>
-        </div>
+        <div class="live-scroll" id="home-live-scroll"></div>
       </div>
 
       <!-- Currently happening -->
@@ -1577,6 +1538,7 @@ async function loadBanners() {
 // Google Sheets 串接
 // ════════════════════════════════════════════
 const SHEETS_ID = '1MBU9FQYsPqEwSgdAjmfxzOETK8vmBPY_JeNkP6vNgCw';
+const YOUTUBE_API_KEY = 'AIzaSyAR_Nr9dZw3HYqcoUcHPDeh1aGfIAdmu5Q'; // ← 填入你的 YouTube API 金鑰
 
 // 讀取 Sheets 某個分頁的所有資料
 async function fetchSheet(sheetName) {
