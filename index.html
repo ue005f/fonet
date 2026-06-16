@@ -134,7 +134,7 @@
   .nav-item svg { width: 22px; height: 22px; }
 
   /* ── Scrollable content ── */
-  .content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-top: var(--header-h); margin-top: 0; }
+  .content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-top: var(--header-h); padding-bottom: calc(var(--nav-h) + 16px); margin-top: 0; }
 
   /* ── Section header ── */
   .section-title {
@@ -1358,39 +1358,38 @@ function toggleExpand(linkEl) {
   const isOpen = expand.classList.contains('open');
 
   if (isOpen) {
-    closeAllExpands();
+    closeExpand(card);
   } else {
+    // 先收起其他所有展開的卡片
     closeAllExpands();
+    // 展開
     expand.classList.add('open');
     linkEl.classList.add('open');
-    if (card) card.classList.add('expanded');
+    card.classList.add('expanded');
     // 捲動讓卡片保持在視窗中
     setTimeout(() => {
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 50);
-    // 下一個 tick 才綁定，避免立刻觸發
-    setTimeout(() => {
-      document._expandListener = function(e) {
-        if (!card.contains(e.target)) {
-          closeAllExpands();
-        }
-      };
-      document.addEventListener('click', document._expandListener);
-      document.addEventListener('touchstart', document._expandListener);
-    }, 0);
+    // 點卡片任何地方收起
+    card._closeHandler = function() { closeExpand(card); };
+    card.addEventListener('click', card._closeHandler);
+  }
+}
+
+function closeExpand(card) {
+  const expand = card.querySelector('.event-expand');
+  const link = card.querySelector('.detail-link');
+  if (expand) expand.classList.remove('open');
+  if (link) link.classList.remove('open');
+  card.classList.remove('expanded');
+  if (card._closeHandler) {
+    card.removeEventListener('click', card._closeHandler);
+    card._closeHandler = null;
   }
 }
 
 function closeAllExpands() {
-  document.querySelectorAll('.event-expand.open').forEach(el => el.classList.remove('open'));
-  document.querySelectorAll('.detail-link.open').forEach(el => el.classList.remove('open'));
-  document.querySelectorAll('.event-card.expanded').forEach(el => el.classList.remove('expanded'));
-  // 移除點擊監聽器
-  if (document._expandListener) {
-    document.removeEventListener('click', document._expandListener);
-    document.removeEventListener('touchstart', document._expandListener);
-    document._expandListener = null;
-  }
+  document.querySelectorAll('.event-card.expanded').forEach(card => closeExpand(card));
 }
 
 // ── Headroom: hide header on scroll down, show on scroll up ──
