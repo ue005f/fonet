@@ -92,6 +92,14 @@
     color: var(--text);
   }
   .logo span { color: var(--accent); }
+  .logo-wrap { display: flex; flex-direction: column; line-height: 1.1; }
+  .logo-tagline {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.02em;
+    margin-top: 1px;
+    white-space: nowrap;
+  }
   .icon-btn {
     width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
@@ -400,6 +408,37 @@
     position: relative;
     display: flex;
     align-items: flex-end;
+  }
+
+  /* ── 遊戲宣傳圖輪播（沒有賽事時的 Hero 替代）── */
+  .game-art-carousel {
+    margin: 12px 18px 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 16/4.5; /* 約半個 16/9 的視覺高度 */
+    background: var(--card);
+  }
+  .game-art-slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    background-size: cover;
+    background-position: center;
+  }
+  .game-art-slide.active { display: block; }
+  .game-art-slide-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(11,16,32,0.85) 0%, rgba(11,16,32,0.15) 60%, transparent 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 12px 16px;
+  }
+  .game-art-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
   }
   .hero-gradient {
     position: absolute;
@@ -860,6 +899,80 @@
   .menu-item:last-child { border-bottom: none; }
   .menu-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
   .menu-item-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* ── 網站說明頁面 ── */
+  .guide-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 400;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .guide-overlay.open { display: flex; }
+  .guide-panel {
+    width: 100%;
+    max-width: 480px;
+    height: 88vh;
+    background: var(--bg);
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0.6; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .guide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .guide-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .guide-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .guide-section { margin-bottom: 24px; }
+  .guide-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .guide-section p {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .guide-term {
+    margin-bottom: 12px;
+    padding-left: 12px;
+    border-left: 2px solid rgba(168,85,247,0.25);
+  }
+  .guide-term strong {
+    display: block;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .guide-term span {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
   .menu-about {
     display: none;
     padding: 10px 16px 14px;
@@ -955,7 +1068,10 @@
   <!-- ══════════════ HOME PAGE ══════════════ -->
   <div class="page active" id="page-home">
     <header>
-      <div class="logo">623<span>Hub</span></div>
+      <div class="logo-wrap">
+        <div class="logo">623<span>Hub</span></div>
+        <div class="logo-tagline">台灣格鬥遊戲賽事與直播資訊</div>
+      </div>
       <button class="icon-btn" onclick="openMenu()">⋯</button>
     </header>
 
@@ -968,6 +1084,8 @@
       </div>
 
       <!-- Hero: 熱門直播 -->
+      <div class="game-art-carousel" id="game-art-carousel" style="display:none;"></div>
+
       <div class="hero hero-panel" id="hero-hot">
         <div class="hero-img">
           <div class="hero-art" id="hero-art-text">FGC</div>
@@ -1049,7 +1167,10 @@
   <!-- ══════════════ LIVE PAGE ══════════════ -->
   <div class="page" id="page-live">
     <header>
-      <div class="logo">623<span>Hub</span></div>
+      <div class="logo-wrap">
+        <div class="logo">623<span>Hub</span></div>
+        <div class="logo-tagline">台灣格鬥遊戲賽事與直播資訊</div>
+      </div>
       <button class="icon-btn" onclick="openMenu()">⋯</button>
     </header>
 
@@ -1124,7 +1245,10 @@
   <!-- ══════════════ EVENTS PAGE ══════════════ -->
   <div class="page" id="page-events">
     <header>
-      <div class="logo">623<span>Hub</span></div>
+      <div class="logo-wrap">
+        <div class="logo">623<span>Hub</span></div>
+        <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
+      </div>
       <button class="icon-btn" onclick="openMenu()">⋯</button>
     </header>
 
@@ -1197,6 +1321,58 @@
   <!-- Expand overlay -->
   <div class="expand-overlay" id="expand-overlay" onclick="closeAllExpands()"></div>
 
+  <!-- 網站說明 -->
+  <div class="guide-overlay" id="guide-overlay">
+    <div class="guide-panel">
+      <div class="guide-header">
+        <div class="guide-title">網站說明</div>
+        <button class="icon-btn" onclick="closeGuide()">✕</button>
+      </div>
+      <div class="guide-content">
+
+        <div class="guide-section">
+          <div class="guide-section-title">這是什麼網站？</div>
+          <p>623Hub 是台灣格鬥遊戲社群的賽事與直播入口。我們整理台灣相關的格鬥遊戲比賽資訊與正在直播的實況主，讓你不用到處搜尋就能掌握社群動態。</p>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title">格鬥遊戲是什麼？</div>
+          <p>格鬥遊戲是兩名玩家操控角色一對一對戰的遊戲類型，強調反應速度、招式組合與心理博弈。常見作品有 Street Fighter（快打旋風）、Tekken（鐵拳）等，全球各地都有職業選手與比賽。</p>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title">常見名詞</div>
+          <div class="guide-term">
+            <strong>觀賽派對</strong>
+            <span>實況主一邊看比賽轉播、一邊跟觀眾聊天討論的直播形式，比單純看官方轉播更有互動感。</span>
+          </div>
+          <div class="guide-term">
+            <strong>焦點大賽</strong>
+            <span>規模較大、受國際關注的格鬥遊戲賽事，通常有多個遊戲項目同時進行。</span>
+          </div>
+          <div class="guide-term">
+            <strong>社群＆聯賽</strong>
+            <span>由社群自行舉辦的小型賽事，或長期定期舉行的積分聯賽。</span>
+          </div>
+          <div class="guide-term">
+            <strong>start.gg</strong>
+            <span>格鬥遊戲圈最常用的賽事報名與賽程查詢平台，許多比賽的詳細賽程都會放在這裡。</span>
+          </div>
+          <div class="guide-term">
+            <strong>Twitch / YouTube</strong>
+            <span>觀看直播的影音平台，本站收錄的實況主大多在這兩個平台開台。</span>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title">怎麼開始看比賽？</div>
+          <p>到「賽事」頁面看看最近有沒有進行中或即將到來的比賽，點賽程表可以查看詳細對戰時間。也可以到「直播」頁面，看看現在有誰正在開台。</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Three-dot menu -->
   <div class="menu-overlay" id="menu-overlay" onclick="closeMenu(event)">
     <div class="menu-panel" onclick="event.stopPropagation()">
@@ -1204,6 +1380,10 @@
         <div class="menu-site-name">623<span>Hub</span></div>
         <div class="menu-site-desc">台灣格鬥遊戲賽事與直播資訊入口</div>
       </div>
+      <button class="menu-item" onclick="openGuide()">
+        <span class="menu-item-icon">📖</span>
+        網站說明
+      </button>
       <button class="menu-item">
         <span class="menu-item-icon">💬</span>
         提供意見回饋
@@ -1246,6 +1426,15 @@ function shuffleLiveCards() {
 function toggleAbout(btn) {
   const about = document.getElementById('menu-about');
   about.classList.toggle('open');
+}
+
+function openGuide() {
+  closeMenu();
+  document.getElementById('guide-overlay').classList.add('open');
+}
+
+function closeGuide() {
+  document.getElementById('guide-overlay').classList.remove('open');
 }
 
 function openMenu() {
@@ -1417,6 +1606,57 @@ function setupHeadroom(contentEl, headerEl) {
 
 // ════════════════════════════════════════════
 // ── Hero 區 ──
+// ── 遊戲宣傳圖輪播（沒有賽事時顯示）──
+const gameArtTimers = {};
+
+async function loadGameArtCarousel() {
+  try {
+    const arts = await fetchSheet('遊戲宣傳圖');
+    const visible = arts.filter(a =>
+      a['顯示'] !== false && a['顯示'] !== 'FALSE' && a['顯示'] !== 0
+    );
+
+    const heroHot = document.getElementById('hero-hot');
+    const carousel = document.getElementById('game-art-carousel');
+    if (!carousel) return;
+
+    if (visible.length === 0) {
+      // 沒有設定圖片，保持原本 Hero 顯示（不要兩個都空）
+      if (heroHot) heroHot.style.display = '';
+      carousel.style.display = 'none';
+      return;
+    }
+
+    // 隱藏原本的 Hero，顯示輪播
+    if (heroHot) heroHot.style.display = 'none';
+    carousel.style.display = 'block';
+
+    visible.sort((a, b) => (Number(a['順序']) || 0) - (Number(b['順序']) || 0));
+
+    carousel.innerHTML = visible.map((a, i) => `
+      <div class="game-art-slide${i === 0 ? ' active' : ''}" style="background-image:url(${a['圖片網址'] || ''});">
+        <div class="game-art-slide-overlay">
+          <div class="game-art-name">${a['遊戲名稱'] || ''}</div>
+        </div>
+      </div>
+    `).join('');
+
+    if (visible.length > 1) {
+      if (gameArtTimers.main) clearInterval(gameArtTimers.main);
+      let current = 0;
+      gameArtTimers.main = setInterval(() => {
+        current = (current + 1) % visible.length;
+        carousel.querySelectorAll('.game-art-slide').forEach((s, i) => {
+          s.classList.toggle('active', i === current);
+        });
+      }, 6000);
+    }
+
+  } catch(e) {
+    console.error('載入遊戲宣傳圖失敗', e);
+  }
+}
+
 async function loadHero() {
   try {
     const events = await fetchSheet('賽事');
@@ -1448,14 +1688,13 @@ async function loadHero() {
       hero = upcoming[0];
     }
 
-    // 沒有賽事 → 隱藏整個 Hero 區塊
+    // 沒有賽事 → 改成遊戲宣傳圖輪播
     if (!hero) {
-      const heroHot = document.getElementById('hero-hot');
       const heroOfficial = document.getElementById('hero-official');
       const heroTabs = document.querySelector('#page-home .tabs');
-      if (heroHot) heroHot.style.display = 'none';
       if (heroOfficial) heroOfficial.style.display = 'none';
       if (heroTabs) heroTabs.style.display = 'none';
+      await loadGameArtCarousel();
       return;
     }
 
@@ -1880,11 +2119,14 @@ async function loadLiveStatus() {
       s['精選'] !== true && s['精選'] !== 'TRUE'
     );
 
-    // Hero 區
+    // Hero 區（只用精選）
     updateHeroWithLive(featuredLive[0] || null);
 
-    // 其他直播橫向滑動（精選在線，排除 hero 那個）
-    updateHomeScroll(featuredLive.slice(1));
+    // 其他直播橫向滑動：優先顯示精選（排除 hero），沒有精選在線時顯示任何在線的人
+    const scrollList = featuredLive.length > 0
+      ? featuredLive.slice(1)
+      : otherLive;
+    updateHomeScroll(scrollList);
 
     renderLiveSection(liveStreamers);
     renderOfflineSection(offlineStreamers, visible.length);
