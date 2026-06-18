@@ -1110,11 +1110,14 @@
         </div>
       </div>
 
-      <!-- Other streams horizontal scroll (hidden until live data available) -->
+      <!-- Other streams horizontal scroll -->
       <div id="home-live-scroll-section" style="display:none;">
         <div class="section-header">
-          <h2>其他直播</h2>
-          <span class="more-link" onclick="showPage('live')">看更多 ›</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="live-title-dot" id="home-scroll-dot" style="display:none;"></div>
+            <h2 id="home-scroll-title">其他直播</h2>
+          </div>
+          <span class="more-link" id="home-scroll-more" onclick="showPage('live')">看更多 ›</span>
         </div>
         <div class="live-scroll" id="home-live-scroll"></div>
       </div>
@@ -1583,12 +1586,6 @@ function openExpand(card) {
   const expand = card.querySelector('.event-expand');
   const link = card.querySelector('.detail-link');
   if (!expand) return;
-  // 記錄展開前的捲動位置和卡片在畫面中的相對位置
-  const scrollEl = card.closest('.content');
-  const scrollTop = scrollEl ? scrollEl.scrollTop : window.scrollY;
-  const cardTop = card.getBoundingClientRect().top;
-  card._scrollTopBefore = scrollTop;
-  card._cardTopBefore = cardTop;
   expand.classList.add('open');
   if (link) link.classList.add('open');
   card.classList.add('expanded');
@@ -1600,19 +1597,6 @@ function closeExpand(card) {
   if (expand) expand.classList.remove('open');
   if (link) link.classList.remove('open');
   card.classList.remove('expanded');
-  // 收合後回到展開前的位置
-  const scrollEl = card.closest('.content');
-  if (card._scrollTopBefore !== undefined) {
-    setTimeout(() => {
-      if (scrollEl) {
-        scrollEl.scrollTop = card._scrollTopBefore;
-      } else {
-        window.scrollTo(0, card._scrollTopBefore);
-      }
-      card._scrollTopBefore = undefined;
-      card._cardTopBefore = undefined;
-    }, 30);
-  }
 }
 
 function closeAllExpands() {
@@ -2263,9 +2247,18 @@ async function loadLiveStatus() {
     // Hero 區：分別更新熱門直播／賽事主台兩個頁籤
     updateHeroTabs(featuredWatchParty, featuredOfficial);
 
-    // 其他直播橫向滑動：有精選在線時顯示其餘的人，沒有精選在線時顯示任何在線的人
+    // 其他直播橫向滑動
     const hasFeaturedLive = featuredWatchParty || featuredOfficial;
-    updateHomeScroll(hasFeaturedLive ? otherLive : liveStreamers);
+    const hasLiveEvent = !!(window._currentLiveEvent);
+    if (hasLiveEvent) {
+      // 有進行中賽事：只顯示精選（排除 hero 的那兩個），標題改「其他共同觀賽」，隱藏看更多
+      updateHomeScroll(otherLive.filter(s =>
+        s['精選'] === true || s['精選'] === 'TRUE'
+      ), true, false);
+    } else {
+      // 沒有進行中賽事：顯示所有在線的，標題改「LIVE」，顯示看更多
+      updateHomeScroll(liveStreamers, false, true);
+    }
 
     renderLiveSection(liveStreamers);
     renderOfflineSection(offlineStreamers, visible.length);
@@ -2435,22 +2428,43 @@ function renderHeroPanel(panelId, streamer, needsCopyright, type) {
   }
 }
 
-// ── 其他直播橫向滑動：精選在線（排除 hero）──
-function updateHomeScroll(featuredStreamers) {
+// ── 其他直播橫向滑動 ──
+// hasLiveEvent: 是否有進行中賽事
+// showMore: 是否顯示「看更多」
+function updateHomeScroll(streamers, hasLiveEvent, showMore) {
   const section = document.getElementById('home-live-scroll-section');
   const scroll = document.getElementById('home-live-scroll');
+  const titleEl = document.getElementById('home-scroll-title');
+  const dotEl = document.getElementById('home-scroll-dot');
+  const moreEl = document.getElementById('home-scroll-more');
   if (!section || !scroll) return;
 
-  if (featuredStreamers.length === 0) {
+  if (streamers.length === 0) {
     section.style.display = 'none';
     return;
   }
 
-  scroll.innerHTML = featuredStreamers.map(s => {
+  // 更新標題和控制元素
+  if (hasLiveEvent) {
+    if (titleEl) titleEl.textContent = '其他共同觀賽';
+    if (dotEl) dotEl.style.display = 'none';
+    if (moreEl) moreEl.style.display = 'none';
+  } else {
+    if (titleEl) titleEl.textContent = 'LIVE';
+    if (dotEl) dotEl.style.display = '';
+    if (moreEl) moreEl.style.display = showMore ? '' : 'none';
+  }
+
+  // 是否需要轉播權（影響縮圖/頭貼選擇）
+  const needsCopyright = window._currentLiveEvent &&
+    (window._currentLiveEvent['需要轉播權'] === true || window._currentLiveEvent['需要轉播權'] === 'TRUE');
+
+  scroll.innerHTML = streamers.map(s => {
     const status = s._status || {};
     const name = s['頻道名稱'] || s['Twitch ID'] || '';
     const game = status['當前遊戲'] || s['主要遊戲'] || '';
     const thumbUrl = status['縮圖 URL'] || '';
+    const avatarUrl = status['頭貼 URL'] || '';
     const platform = status['平台'] || s['平台'] || '';
     const twitchId = String(s['Twitch ID'] || '').trim();
     const ytId = String(s['YouTube ID'] || '').trim();
@@ -2458,12 +2472,17 @@ function updateHomeScroll(featuredStreamers) {
     if (platform === 'Twitch' && twitchId) url = `https://www.twitch.tv/${twitchId}`;
     else if (platform === 'YouTube' && ytId) url = `https://www.youtube.com/@${ytId}`;
 
+    // 依轉播權決定顯示縮圖或頭貼
+    const imgUrl = (hasLiveEvent && needsCopyright)
+      ? avatarUrl
+      : (thumbUrl && thumbUrl !== '-' ? thumbUrl : avatarUrl);
+
     return `
       <a href="${url}" target="_blank" style="text-decoration:none;">
         <div class="live-scroll-card">
           <div class="live-scroll-thumb">
-            ${thumbUrl && thumbUrl !== '-'
-              ? `<img src="${thumbUrl}" style="width:100%;height:100%;object-fit:cover;">`
+            ${imgUrl
+              ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;">`
               : `<span style="font-size:28px;color:rgba(255,255,255,0.15);">🎮</span>`}
             <div class="live-dot">LIVE</div>
           </div>
