@@ -236,6 +236,7 @@
     font-size: 12px;
     color: var(--text3);
     margin-top: 6px;
+    width: 100%;
   }
   .btn-schedule {
     padding: 7px 14px;
@@ -1031,9 +1032,10 @@
     touch-action: none; /* 但只攔截點擊，不攔截捲動 */
   }
 
-  /* 展開時卡片有輕微高亮 */
+  /* 展開時卡片輕微高亮（不閃爍） */
   .event-card.expanded {
-    border-color: rgba(168,85,247,0.25);
+    border-color: rgba(168,85,247,0.15);
+    transition: border-color 0.2s ease;
   }
   .detail-link {
     display: flex;
@@ -1579,6 +1581,10 @@ function closeExpand(card) {
   if (expand) expand.classList.remove('open');
   if (link) link.classList.remove('open');
   card.classList.remove('expanded');
+  // 收合後捲動到卡片頂部
+  setTimeout(() => {
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
 }
 
 function closeAllExpands() {
@@ -2051,7 +2057,7 @@ function renderEventCard(ev, isTwFiltered) {
         </div>` : '';
 
   const scheduleBtn = hasSchedule
-    ? `<a href="${hasSchedule}" target="_blank"><button class="btn-schedule">賽程表</button></a>`
+    ? `<a href="${hasSchedule}" target="_blank" onclick="event.stopPropagation()"><button class="btn-schedule">賽程表</button></a>`
     : '';
 
   return `
@@ -2061,10 +2067,10 @@ function renderEventCard(ev, isTwFiltered) {
             <div class="event-tags">${tags.join('')}</div>
             <div class="event-name">${ev['名稱'] || ''}</div>
             <div class="event-date">${dateStr}</div>
-            ${shortDesc ? `<div class="event-desc">${shortDesc}</div>` : ''}
           </div>
           ${scheduleBtn}
         </div>
+        ${shortDesc ? `<div class="event-desc">${shortDesc}</div>` : ''}
         ${detailSection}
       </div>`;
 }
