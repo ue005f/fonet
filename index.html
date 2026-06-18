@@ -1528,6 +1528,22 @@ function applyTWFilter(twOn) {
       card.style.display = '';
     }
   });
+
+  // 隱藏空的月份標籤（沒有可見卡片的月份）
+  const monthLabels = document.querySelectorAll('#events-featured .month-label');
+  monthLabels.forEach(label => {
+    // 找到這個月份標籤之後、下一個月份標籤之前的所有卡片
+    let sibling = label.nextElementSibling;
+    let hasVisible = false;
+    while (sibling && !sibling.classList.contains('month-label')) {
+      if (sibling.classList.contains('event-card') && sibling.style.display !== 'none') {
+        hasVisible = true;
+        break;
+      }
+      sibling = sibling.nextElementSibling;
+    }
+    label.style.display = hasVisible ? '' : 'none';
+  });
 }
 
 function toggleOffline(btn) {
@@ -1567,12 +1583,15 @@ function openExpand(card) {
   const expand = card.querySelector('.event-expand');
   const link = card.querySelector('.detail-link');
   if (!expand) return;
+  // 記錄展開前的捲動位置和卡片在畫面中的相對位置
+  const scrollEl = card.closest('.content');
+  const scrollTop = scrollEl ? scrollEl.scrollTop : window.scrollY;
+  const cardTop = card.getBoundingClientRect().top;
+  card._scrollTopBefore = scrollTop;
+  card._cardTopBefore = cardTop;
   expand.classList.add('open');
   if (link) link.classList.add('open');
   card.classList.add('expanded');
-  setTimeout(() => {
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, 50);
 }
 
 function closeExpand(card) {
@@ -1581,10 +1600,19 @@ function closeExpand(card) {
   if (expand) expand.classList.remove('open');
   if (link) link.classList.remove('open');
   card.classList.remove('expanded');
-  // 收合後捲動到卡片頂部
-  setTimeout(() => {
-    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+  // 收合後回到展開前的位置
+  const scrollEl = card.closest('.content');
+  if (card._scrollTopBefore !== undefined) {
+    setTimeout(() => {
+      if (scrollEl) {
+        scrollEl.scrollTop = card._scrollTopBefore;
+      } else {
+        window.scrollTo(0, card._scrollTopBefore);
+      }
+      card._scrollTopBefore = undefined;
+      card._cardTopBefore = undefined;
+    }, 30);
+  }
 }
 
 function closeAllExpands() {
@@ -2545,21 +2573,23 @@ async function loadHomeEvents() {
       }
     }
 
-    // 近期賽事（焦點大賽，未來，最多4筆，依日期排序）
+    // 近期賽事（所有分類，未來 30 天內，最多 6 筆）
+    const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
     const upcomingEvs = visible
       .filter(ev => {
-        const cat = ev['分類'] || '';
         if (isEventLive(ev)) return false; // 進行中的不放近期賽事
-        if (cat !== '焦點大賽') return false;
+        const start = ev['開始日期'] instanceof Date ? ev['開始日期'] : (ev['開始日期'] ? new Date(ev['開始日期']) : null);
         const end = ev['結束日期'] instanceof Date ? ev['結束日期'] : (ev['結束日期'] ? new Date(ev['結束日期']) : null);
-        return !end || end >= today;
+        if (!start) return false;
+        if (end && end < today) return false; // 已結束
+        return start <= thirtyDaysLater; // 30 天內開始
       })
       .sort((a, b) => {
         const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
         const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
         return da - db;
       })
-      .slice(0, 4);
+      .slice(0, 6);
 
     const upcomingContainer = document.getElementById('home-upcoming-events');
     if (upcomingContainer) {
