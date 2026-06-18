@@ -94,11 +94,12 @@
   .logo span { color: var(--accent); }
   .logo-wrap { display: flex; flex-direction: column; line-height: 1.1; }
   .logo-tagline {
-    font-size: 9px;
-    color: var(--text3);
-    letter-spacing: 0.02em;
-    margin-top: 1px;
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.01em;
+    margin-top: 2px;
     white-space: nowrap;
+    font-weight: 500;
   }
   .icon-btn {
     width: 36px; height: 36px;
@@ -1070,7 +1071,7 @@
     <header>
       <div class="logo-wrap">
         <div class="logo">623<span>Hub</span></div>
-        <div class="logo-tagline">台灣格鬥遊戲賽事與直播資訊</div>
+        <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
       </div>
       <button class="icon-btn" onclick="openMenu()">⋯</button>
     </header>
@@ -1117,11 +1118,13 @@
       </div>
 
       <!-- Currently happening -->
-      <div class="section-header">
-        <h2>現正進行中</h2>
-      </div>
-      <div id="home-live-events">
-        <div class="loading-placeholder">載入中…</div>
+      <div id="home-live-section">
+        <div class="section-header">
+          <h2>現正進行中</h2>
+        </div>
+        <div id="home-live-events">
+          <div class="loading-placeholder">載入中…</div>
+        </div>
       </div>
 
       <!-- Banner carousel -->
@@ -1169,7 +1172,7 @@
     <header>
       <div class="logo-wrap">
         <div class="logo">623<span>Hub</span></div>
-        <div class="logo-tagline">台灣格鬥遊戲賽事與直播資訊</div>
+        <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
       </div>
       <button class="icon-btn" onclick="openMenu()">⋯</button>
     </header>
@@ -1247,7 +1250,7 @@
     <header>
       <div class="logo-wrap">
         <div class="logo">623<span>Hub</span></div>
-        <div class="logo-tagline">台灣格鬥遊戲賽事與直播資訊</div>
+        <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
       </div>
       <button class="icon-btn" onclick="openMenu()">⋯</button>
     </header>
@@ -1378,7 +1381,7 @@
     <div class="menu-panel" onclick="event.stopPropagation()">
       <div class="menu-header">
         <div class="menu-site-name">623<span>Hub</span></div>
-        <div class="menu-site-desc">台灣格鬥遊戲賽事與直播資訊入口</div>
+        <div class="menu-site-desc">一站追蹤台灣格鬥遊戲賽事、直播資訊入口</div>
       </div>
       <button class="menu-item" onclick="openGuide()">
         <span class="menu-item-icon">📖</span>
@@ -1667,29 +1670,14 @@ async function loadHero() {
       ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
     );
 
-    // 優先：進行中的焦點大賽
-    let hero = visible.find(ev =>
+    // 是否有「進行中」的焦點大賽
+    const liveHero = visible.find(ev =>
       (ev['進行中'] === true || ev['進行中'] === 'TRUE') &&
       ev['分類'] === '焦點大賽'
     );
 
-    // 其次：最近即將到來的焦點大賽
-    if (!hero) {
-      const upcoming = visible
-        .filter(ev => {
-          const start = ev['開始日期'] instanceof Date ? ev['開始日期'] : new Date(ev['開始日期'] || 0);
-          return ev['分類'] === '焦點大賽' && start >= today;
-        })
-        .sort((a, b) => {
-          const da = a['開始日期'] instanceof Date ? a['開始日期'] : new Date(a['開始日期'] || 0);
-          const db = b['開始日期'] instanceof Date ? b['開始日期'] : new Date(b['開始日期'] || 0);
-          return da - db;
-        });
-      hero = upcoming[0];
-    }
-
-    // 沒有賽事 → 改成遊戲宣傳圖輪播
-    if (!hero) {
+    // 沒有進行中的賽事 → 改成遊戲宣傳圖輪播（即使有即將到來的賽事也輪播）
+    if (!liveHero) {
       const heroOfficial = document.getElementById('hero-official');
       const heroTabs = document.querySelector('#page-home .tabs');
       if (heroOfficial) heroOfficial.style.display = 'none';
@@ -1697,6 +1685,8 @@ async function loadHero() {
       await loadGameArtCarousel();
       return;
     }
+
+    const hero = liveHero;
 
     const isLive = hero['進行中'] === true || hero['進行中'] === 'TRUE';
     const name = hero['名稱'] || '';
@@ -2382,11 +2372,13 @@ async function loadHomeEvents() {
     const liveEvs = visible.filter(ev =>
       ev['進行中'] === true || ev['進行中'] === 'TRUE'
     );
+    const liveSection = document.getElementById('home-live-section');
     const liveContainer = document.getElementById('home-live-events');
-    if (liveContainer) {
+    if (liveSection && liveContainer) {
       if (liveEvs.length === 0) {
-        liveContainer.innerHTML = '<div class="loading-placeholder" style="padding:12px 18px;">目前沒有進行中的賽事</div>';
+        liveSection.style.display = 'none';
       } else {
+        liveSection.style.display = '';
         liveContainer.innerHTML = liveEvs.map(ev => renderEventCard(ev, false)).join('');
       }
     }
