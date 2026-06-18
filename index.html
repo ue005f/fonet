@@ -1992,23 +1992,20 @@ function renderEventCard(ev, isTwFiltered) {
 
   const tags = [];
   const repeatType = ev['重複類型'] || '';
+  const repeatDays = (ev['重複星期'] || '').trim();
   if (isLive) tags.push('<span class="tag tag-live">● 進行中</span>');
-  else if (repeatType === '每週') tags.push('<span class="tag tag-weekly">每週</span>');
-  else if (repeatType === '每月') tags.push('<span class="tag tag-weekly">每月</span>');
+  else if (repeatType === '固定星期') tags.push('<span class="tag tag-weekly">每週</span>');
   if (isTW) tags.push('<span class="tag tag-tw">台灣選手</span>');
 
   // 日期處理
   let dateStr = '';
-  if (repeatType === '每週' || repeatType === '每月') {
-    const nextDate = ev['下次舉辦日期'];
-    let nextStr = '';
-    if (nextDate) {
-      const d = nextDate instanceof Date ? nextDate : new Date(nextDate);
-      if (!isNaN(d.getTime())) {
-        nextStr = `${d.getMonth()+1}/${d.getDate()}`;
-      }
-    }
-    dateStr = nextStr ? `${repeatType} · 下次：${nextStr}（台灣時間）` : repeatType;
+  if (repeatType === '固定星期' && repeatDays) {
+    // 顯示「每週四」或「每週六、日」
+    const days = repeatDays.split(/[,，、]/).map(d => d.trim()).join('、');
+    dateStr = `每週${days}`;
+    // 加上系列賽期間
+    const rangeStr = formatDateRange(ev['開始日期'], ev['結束日期']);
+    if (rangeStr) dateStr += `（${rangeStr.replace('（台灣時間）', '')}）`;
   } else {
     dateStr = formatDateRange(ev['開始日期'], ev['結束日期']);
   }
