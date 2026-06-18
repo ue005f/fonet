@@ -2000,12 +2000,42 @@ function renderEventCard(ev, isTwFiltered) {
   // 日期處理
   let dateStr = '';
   if (repeatType === '固定星期' && repeatDays) {
-    // 顯示「每週四」或「每週六、日」
-    const days = repeatDays.split(/[,，、]/).map(d => d.trim()).join('、');
-    dateStr = `每週${days}`;
-    // 加上系列賽期間
-    const rangeStr = formatDateRange(ev['開始日期'], ev['結束日期']);
-    if (rangeStr) dateStr += `（${rangeStr.replace('（台灣時間）', '')}）`;
+    // 計算這週（或下週）符合星期幾的具體日期
+    const dayMap = { '日':0, '一':1, '二':2, '三':3, '四':4, '五':5, '六':6 };
+    const targetDays = repeatDays.split(/[,，、]/).map(d => dayMap[d.trim()]).filter(d => d !== undefined).sort();
+
+    const now = new Date();
+    const todayNum = now.getDay();
+
+    // 找這週內符合的日期
+    const dates = targetDays.map(d => {
+      const diff = d - todayNum;
+      const date = new Date(now);
+      date.setDate(now.getDate() + diff);
+      return date;
+    }).sort((a, b) => a - b);
+
+    // 如果這週的日期都已過，往下一週
+    const futureDates = dates.filter(d => {
+      const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return day >= today;
+    });
+
+    const displayDates = futureDates.length > 0 ? futureDates : dates.map(d => {
+      const next = new Date(d);
+      next.setDate(next.getDate() + 7);
+      return next;
+    });
+
+    if (displayDates.length === 1) {
+      const d = displayDates[0];
+      dateStr = `${d.getMonth()+1}/${d.getDate()}（台灣時間）`;
+    } else if (displayDates.length > 1) {
+      const first = displayDates[0];
+      const last = displayDates[displayDates.length - 1];
+      dateStr = `${first.getMonth()+1}/${first.getDate()} ～ ${last.getMonth()+1}/${last.getDate()}（台灣時間）`;
+    }
   } else {
     dateStr = formatDateRange(ev['開始日期'], ev['結束日期']);
   }
