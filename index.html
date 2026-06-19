@@ -2234,28 +2234,26 @@ async function loadLiveStatus() {
       }
     });
 
-    // 分出精選頻道：觀賽派對精選（官方台=FALSE）與賽事主台精選（官方台=TRUE）
-    const featuredWatchParty = liveStreamers.find(s =>
-      (s['精選'] === true || s['精選'] === 'TRUE') &&
-      (s['官方台'] !== true && s['官方台'] !== 'TRUE')
-    );
-    const featuredOfficial = liveStreamers.find(s =>
-      (s['精選'] === true || s['精選'] === 'TRUE') &&
-      (s['官方台'] === true || s['官方台'] === 'TRUE')
-    );
+    // 精選頻道（官方台和非官方台都算），依觀看人數排序取最高的
+    const allFeatured = liveStreamers
+      .filter(s => s['精選'] === true || s['精選'] === 'TRUE')
+      .sort((a, b) => {
+        const va = Number((a._status || {})['觀看人數'] || 0);
+        const vb = Number((b._status || {})['觀看人數'] || 0);
+        return vb - va;
+      });
+
+    const heroStreamer = allFeatured[0] || null;
 
     // 用於排除「其他直播」橫向滑動裡重複出現
-    const featuredIds = [featuredWatchParty, featuredOfficial]
-      .filter(Boolean)
-      .map(s => String(s['Twitch ID'] || s['YouTube ID'] || '').trim());
-
+    const heroId = heroStreamer ? String(heroStreamer['Twitch ID'] || heroStreamer['YouTube ID'] || '').trim() : '';
     const otherLive = liveStreamers.filter(s => {
       const id = String(s['Twitch ID'] || s['YouTube ID'] || '').trim();
-      return !featuredIds.includes(id);
+      return id !== heroId;
     });
 
-    // Hero 區：分別更新熱門直播／賽事主台兩個頁籤
-    updateHeroTabs(featuredWatchParty, featuredOfficial);
+    // Hero 區
+    updateHeroTabs(heroStreamer);
 
     // 其他直播橫向滑動
     const hasFeaturedLive = featuredWatchParty || featuredOfficial;
@@ -2327,90 +2325,48 @@ async function loadHeroThenLive() {
 }
 
 // ── Hero 區：分別更新熱門直播／賽事主台兩個頁籤 ──
-async function updateHeroTabs(watchPartyStreamer, officialStreamer) {
-  // 查目前進行中的賽事，判斷是否需要轉播權
-  let needsCopyright = false;
-  try {
-    const events = await fetchSheet('賽事');
-    const liveEvent = events.find(ev =>
-      isEventLive(ev) && ev['分類'] === '焦點大賽'
-    );
-    if (liveEvent) {
-      needsCopyright = liveEvent['需要轉播權'] === true || liveEvent['需要轉播權'] === 'TRUE';
-    }
-  } catch(e) {
-    console.error('查詢轉播權失敗', e);
-  }
-
+async function updateHeroTabs(heroStreamer) {
   const heroTabs = document.querySelector('#page-home .tabs');
-  const tabHot = heroTabs ? heroTabs.querySelector('.tab[onclick*="hot"]') : null;
-  const tabOfficial = heroTabs ? heroTabs.querySelector('.tab[onclick*="official"]') : null;
   const heroHot = document.getElementById('hero-hot');
   const heroOfficial = document.getElementById('hero-official');
 
-  // ── 熱門直播頁籤 ──
-  if (watchPartyStreamer) {
-    if (tabHot) tabHot.style.display = '';
-    renderHeroPanel('hero-hot', watchPartyStreamer, needsCopyright, 'watchparty');
-  } else {
-    // 沒有在線 → 隱藏這個頁籤
-    if (tabHot) tabHot.style.display = 'none';
-  }
-
-  // ── 賽事主台頁籤 ──
-  if (officialStreamer) {
-    if (tabOfficial) tabOfficial.style.display = '';
-    renderHeroPanel('hero-official', officialStreamer, needsCopyright, 'official');
-  } else {
-    if (tabOfficial) tabOfficial.style.display = 'none';
-  }
-
-  // ── 兩個都不在線 → 隱藏頁籤列，顯示熱門直播面板裡的賽事靜態資訊 ──
-  if (!watchPartyStreamer && !officialStreamer) {
+  // 沒有精選在線 → 隱藏頁籤，保留 loadHero 寫入的靜態資訊
+  if (!heroStreamer) {
     if (heroTabs) heroTabs.style.display = 'none';
-    if (heroHot) heroHot.style.display = ''; // loadHero() 已經把靜態資訊寫進這裡
+    if (heroHot) heroHot.style.display = '';
     if (heroOfficial) heroOfficial.style.display = 'none';
     return;
   }
 
-  // 至少有一個在線 → 顯示頁籤列
-  if (heroTabs) heroTabs.style.display = '';
+  // 查轉播權
+  const needsCopyright = window._currentLiveEvent &&
+    (window._currentLiveEvent['需要轉播權'] === true || window._currentLiveEvent['需要轉播權'] === 'TRUE');
 
-  // 預設顯示熱門直播（如果有），否則顯示賽事主台
-  if (watchPartyStreamer) {
-    if (heroHot) heroHot.style.display = '';
-    if (heroOfficial) heroOfficial.style.display = 'none';
-    if (tabHot) tabHot.classList.add('active');
-    if (tabOfficial) tabOfficial.classList.remove('active');
-  } else {
-    if (heroHot) heroHot.style.display = 'none';
-    if (heroOfficial) heroOfficial.style.display = '';
-    if (tabOfficial) tabOfficial.classList.add('active');
-    if (tabHot) tabHot.classList.remove('active');
-  }
+  // 隱藏頁籤列（不再需要切換）
+  if (heroTabs) heroTabs.style.display = 'none';
+
+  // 顯示 hero-hot，隱藏 hero-official
+  if (heroHot) heroHot.style.display = '';
+  if (heroOfficial) heroOfficial.style.display = 'none';
+
+  renderHeroPanel('hero-hot', heroStreamer, needsCopyright);
 }
 
-// 渲染單一 Hero 面板（熱門直播 or 賽事主台）
-function renderHeroPanel(panelId, streamer, needsCopyright, type) {
+// 渲染 Hero 面板
+function renderHeroPanel(panelId, streamer, needsCopyright) {
   const status = streamer._status || {};
   const name = streamer['頻道名稱'] || streamer['Twitch ID'] || '';
   const game = status['當前遊戲'] || streamer['主要遊戲'] || '';
   const liveTitle = status['直播標題'] || '';
-  const platform = status['平台'] || streamer['平台'] || '';
-  const twitchId = String(streamer['Twitch ID'] || '').trim();
-  const ytId = String(streamer['YouTube ID'] || '').trim();
   const thumbUrl = status['縮圖 URL'] || '';
   const avatarUrl = status['頭貼 URL'] || '';
 
-  let streamUrl = '#';
-  if (platform === 'Twitch' && twitchId) streamUrl = `https://www.twitch.tv/${twitchId}`;
-  else if (platform === 'YouTube' && ytId) streamUrl = `https://www.youtube.com/@${ytId}`;
+  // 賽程連結從當前賽事拿
+  const scheduleUrl = window._currentLiveEvent ? (window._currentLiveEvent['賽程連結'] || '') : '';
 
   // 決定顯示縮圖還是頭貼
   const heroImg = document.querySelector('#' + panelId + ' .hero-img');
-  const artElId = panelId === 'hero-hot' ? 'hero-art-text' : 'hero-official-art';
-  const artEl = document.getElementById(artElId);
-
+  const artEl = document.getElementById('hero-art-text');
   const imageToShow = needsCopyright ? avatarUrl : (thumbUrl && thumbUrl !== '-' ? thumbUrl : avatarUrl);
 
   if (heroImg && imageToShow) {
@@ -2420,20 +2376,17 @@ function renderHeroPanel(panelId, streamer, needsCopyright, type) {
   }
   if (artEl) artEl.style.display = 'none';
 
-  const titleLabel = type === 'official' ? `${name}（官方主台）` : name;
-  const contentId = panelId === 'hero-hot' ? 'hero-hot-content' : 'hero-official-content';
-  const content = document.getElementById(contentId);
-  if (content) {
-    content.innerHTML = `
-      <div class="hero-event-name">${titleLabel}</div>
+  const contentEl = document.getElementById('hero-hot-content');
+  if (contentEl) {
+    contentEl.innerHTML = `
+      <div class="hero-event-name">${name}</div>
       <div class="hero-sub">
         <span class="hero-live-badge">LIVE</span>
         ${liveTitle || game}
       </div>
       ${liveTitle && game ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${game}</div>` : ''}
       <div class="hero-cta">
-        <a href="${streamUrl}" target="_blank"><button class="btn-primary">前往${platform} →</button></a>
-        <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
+        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽事詳細 →</button></a>` : ''}
       </div>`;
   }
 }
