@@ -1144,6 +1144,9 @@
 
     <div class="content">
 
+      <!-- Hero container (hidden until ready) -->
+      <div id="hero-container" class="hero-container">
+
       <!-- Tabs -->
       <div class="tabs">
         <div class="tab active" onclick="switchHeroTab(this, 'hot')">熱門直播</div>
@@ -1151,6 +1154,8 @@
       </div>
 
       <!-- Hero: 熱門直播 -->
+      </div><!-- /hero-container -->
+
       <div class="game-art-carousel" id="game-art-carousel" style="display:none;"></div>
 
       <div class="hero hero-panel" id="hero-hot">
@@ -1979,11 +1984,20 @@ async function loadBanners() {
       .filter(b => b['顯示'] !== false && b['顯示'] !== 'FALSE' && b['顯示'] !== 0)
       .sort((a, b) => (Number(a['順序']) || 0) - (Number(b['順序']) || 0));
 
-    renderBannerCarousel('banner-home', visible);
-    renderBannerCarousel('banner-community', visible);
+    // 依「位置」欄位篩選
+    const forHome = visible.filter(b => {
+      const pos = (b['位置'] || '').trim();
+      return !pos || pos === '全部' || pos === '首頁';
+    });
+    const forCommunity = visible.filter(b => {
+      const pos = (b['位置'] || '').trim();
+      return !pos || pos === '全部' || pos === '社群聯賽';
+    });
+
+    renderBannerCarousel('banner-home', forHome);
+    renderBannerCarousel('banner-community', forCommunity);
   } catch(e) {
     console.error('載入 Banner 失敗', e);
-    // Hide banners on error
     ['banner-home', 'banner-community'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -2443,6 +2457,10 @@ async function loadHeroThenLive() {
 
   // 再載入直播狀態（需要查 Sheets 兩個分頁）
   await loadLiveStatus();
+
+  // 判定完成後顯示 Hero 區
+  const heroContainer = document.getElementById('hero-container');
+  if (heroContainer) heroContainer.classList.add('ready');
 }
 
 // ── Hero 區：分別更新熱門直播／賽事主台兩個頁籤 ──
