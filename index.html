@@ -188,9 +188,10 @@
     border: 1px solid rgba(255,68,68,0.3);
   }
   .tag-tw {
-    background: var(--accent-dim);
-    color: var(--accent);
-    border: 1px solid rgba(25,247,226,0.25);
+    background: rgba(168,85,247,0.2);
+    color: #C084FC;
+    border: 1px solid rgba(168,85,247,0.5);
+    font-weight: 700;
   }
   .tag-game {
     background: var(--card2);
@@ -418,7 +419,7 @@
     border-radius: var(--radius);
     overflow: hidden;
     position: relative;
-    aspect-ratio: 16/4.5; /* 約半個 16/9 的視覺高度 */
+    aspect-ratio: 16/6.5; /* 比原本稍高 */
     background: var(--card);
   }
   .game-art-slide {
@@ -1484,32 +1485,44 @@ function initPageFromHash() {
 }
 
 function filterChip(chipEl, game) {
-  // Update chip styles
   chipEl.closest('.filter-chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
-  // Show/hide offline section — only visible on 全部
+
   const offlineSection = document.getElementById('offline-section');
   if (offlineSection) {
     offlineSection.style.display = (game === 'all') ? '' : 'none';
   }
-  // Filter live cards (exclude offline-list cards when not 全部)
+
+  const mainGames = ['sf6','kof','cotw','ggst','gbvsr','tk8'];
+  const livePage = document.querySelector('#page-live .content');
   const cards = document.querySelectorAll('#page-live .live-card');
+  let visibleCount = 0;
+
   cards.forEach(card => {
+    if (card.closest('.offline-list')) return;
     const g = card.dataset.game || 'other';
-    const mainGames = ['sf6','kof','cotw','ggst','gbvsr','tk8'];
-    if (game === 'all') {
-      // Only show online cards here; offline list handles its own
-      if (!card.closest('.offline-list')) card.style.display = '';
-    } else if (game === 'other') {
-      if (!card.closest('.offline-list')) {
-        card.style.display = mainGames.includes(g) ? 'none' : '';
-      }
-    } else {
-      if (!card.closest('.offline-list')) {
-        card.style.display = (g === game) ? '' : 'none';
-      }
-    }
+    let show = false;
+    if (game === 'all') show = true;
+    else if (game === 'other') show = !mainGames.includes(g);
+    else show = (g === game);
+    card.style.display = show ? '' : 'none';
+    if (show) visibleCount++;
   });
+
+  // 移除舊的空結果提示
+  const existing = document.getElementById('live-empty-msg');
+  if (existing) existing.remove();
+
+  // 顯示空結果提示
+  if (visibleCount === 0 && game !== 'all') {
+    const msg = document.createElement('div');
+    msg.id = 'live-empty-msg';
+    msg.style.cssText = 'text-align:center;color:var(--text3);font-size:13px;padding:32px 18px;';
+    msg.textContent = '── 目前沒有直播中的頻道 ──';
+    if (offlineSection && livePage) {
+      livePage.insertBefore(msg, offlineSection);
+    }
+  }
 }
 
 function switchEventsTab(tabEl, panel) {
