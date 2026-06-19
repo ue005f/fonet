@@ -842,6 +842,59 @@
   /* empty space at bottom of offline */
   .spacer { height: 20px; }
 
+  /* ── Skeleton loading ── */
+  @keyframes skeleton-shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%);
+    background-size: 800px 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+  }
+  .skeleton-card {
+    margin: 0 18px 8px;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .skeleton-line {
+    height: 14px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+  }
+  .skeleton-line.short { width: 40%; }
+  .skeleton-line.medium { width: 65%; }
+  .skeleton-line.full { width: 100%; }
+  .skeleton-line.title { height: 20px; width: 75%; }
+  .skeleton-tag { height: 18px; width: 52px; border-radius: 4px; margin-bottom: 8px; display: inline-block; }
+  .skeleton-hero {
+    margin: 12px 18px 0;
+    border-radius: var(--radius);
+    aspect-ratio: 16/9;
+  }
+  .skeleton-scroll {
+    display: flex;
+    gap: 10px;
+    padding: 0 18px 4px;
+    overflow: hidden;
+  }
+  .skeleton-scroll-card {
+    flex-shrink: 0;
+    width: 130px;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .skeleton-scroll-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+  }
+  .skeleton-scroll-name { height: 12px; width: 80%; border-radius: 3px; }
+
   /* ── Loading placeholder ── */
   .loading-placeholder {
     text-align: center;
@@ -1139,7 +1192,16 @@
           <h2>現正進行中</h2>
         </div>
         <div id="home-live-events">
-          <div class="loading-placeholder">載入中…</div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-tag"></div>
+            <div class="skeleton skeleton-line title"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-tag"></div>
+            <div class="skeleton skeleton-line title"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
         </div>
       </div>
 
@@ -1155,7 +1217,18 @@
       </div>
 
       <div id="home-upcoming-events">
-        <div class="loading-placeholder">載入中…</div>
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-line title"></div>
+          <div class="skeleton skeleton-line short"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-line title"></div>
+          <div class="skeleton skeleton-line short"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-line title"></div>
+          <div class="skeleton skeleton-line short"></div>
+        </div>
       </div>
 
       <div class="spacer"></div>
@@ -1289,7 +1362,20 @@
 
       <!-- ── 焦點大賽 panel ── -->
       <div id="events-featured">
-        <div class="loading-placeholder">載入中…</div>
+        <div class="skeleton skeleton-line short" style="margin:20px 18px 10px;height:12px;"></div>
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-tag"></div>
+          <div class="skeleton skeleton-line title"></div>
+          <div class="skeleton skeleton-line short"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-line title"></div>
+          <div class="skeleton skeleton-line short"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-line title"></div>
+          <div class="skeleton skeleton-line short"></div>
+        </div>
       </div><!-- /events-featured -->
 
       <!-- ── 社群 & 聯賽 panel ── -->
@@ -1302,12 +1388,22 @@
 
         <div class="section-sub-label">社群</div>
         <div id="events-social-cards">
-          <div class="loading-placeholder">載入中…</div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-line title"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
         </div>
 
         <div class="section-sub-label">聯賽</div>
         <div id="events-community-cards">
-          <div class="loading-placeholder">載入中…</div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-line title"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-line title"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
         </div>
 
       </div><!-- /events-community -->
