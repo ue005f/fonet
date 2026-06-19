@@ -721,6 +721,16 @@
   }
   .toggle.on::after { transform: translateX(16px); }
 
+  /* ── 直播頁小標題 ── */
+  .live-sub-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 14px 18px 6px;
+  }
+
   /* ── OFFLINE divider in live page ── */
   .offline-bar {
     display: flex;
@@ -1289,13 +1299,13 @@
           <div class="loading-placeholder" style="padding:24px;">載入中…</div>
         </div>
 
-        <div class="section-sub-label">聯賽</div>
-        <div id="events-community-cards">
+        <div class="section-sub-label">社群</div>
+        <div id="events-social-cards">
           <div class="loading-placeholder">載入中…</div>
         </div>
 
-        <div class="section-sub-label">社群</div>
-        <div id="events-social-cards">
+        <div class="section-sub-label">聯賽</div>
+        <div id="events-community-cards">
           <div class="loading-placeholder">載入中…</div>
         </div>
 
@@ -2498,29 +2508,70 @@ function updateHomeScroll(streamers, hasLiveEvent, showMore) {
 }
 
 function renderLiveSection(liveStreamers) {
-  // 直播頁 LIVE 區塊
   const livePage = document.querySelector('#page-live .content');
   if (!livePage) return;
 
-  // 移除舊的假資料 live cards（不在 offline-list 裡的）
-  livePage.querySelectorAll('.live-card:not(.offline-list .live-card)').forEach(c => c.closest('a') ? c.closest('a').remove() : c.remove());
+  // 移除舊的卡片和小標題（不在 offline-list 裡的）
+  livePage.querySelectorAll('.live-card:not(.offline-list .live-card), .live-sub-label').forEach(el => {
+    const parent = el.closest('a') || el;
+    parent.remove();
+  });
 
   const offlineSection = document.getElementById('offline-section');
+  const hasLiveEvent = !!(window._currentLiveEvent);
+
+  const insertBefore = (el) => {
+    if (offlineSection) livePage.insertBefore(el, offlineSection);
+    else livePage.appendChild(el);
+  };
 
   if (liveStreamers.length === 0) {
-    // 沒有人在線
     const emptyMsg = document.createElement('div');
     emptyMsg.className = 'loading-placeholder';
     emptyMsg.style.padding = '20px 18px';
     emptyMsg.textContent = '目前沒有直播';
-    if (offlineSection) livePage.insertBefore(emptyMsg, offlineSection);
+    insertBefore(emptyMsg);
+    return;
+  }
+
+  if (hasLiveEvent) {
+    // 有進行中賽事：分成「共同觀賽」和其他直播
+    const watchParty = liveStreamers.filter(s =>
+      s['精選'] === true || s['精選'] === 'TRUE'
+    );
+    const others = liveStreamers.filter(s =>
+      s['精選'] !== true && s['精選'] !== 'TRUE'
+    );
+
+    if (watchParty.length > 0) {
+      const label = document.createElement('div');
+      label.className = 'live-sub-label';
+      label.textContent = '共同觀賽';
+      insertBefore(label);
+      watchParty.forEach(s => {
+        const div = document.createElement('div');
+        div.innerHTML = renderLiveCard(s);
+        insertBefore(div.firstElementChild);
+      });
+    }
+
+    if (others.length > 0) {
+      const label = document.createElement('div');
+      label.className = 'live-sub-label';
+      label.textContent = '其他直播';
+      insertBefore(label);
+      others.forEach(s => {
+        const div = document.createElement('div');
+        div.innerHTML = renderLiveCard(s);
+        insertBefore(div.firstElementChild);
+      });
+    }
   } else {
+    // 沒有進行中賽事：直接列出所有直播
     liveStreamers.forEach(s => {
       const div = document.createElement('div');
       div.innerHTML = renderLiveCard(s);
-      const card = div.firstElementChild;
-      if (offlineSection) livePage.insertBefore(card, offlineSection);
-      else livePage.appendChild(card);
+      insertBefore(div.firstElementChild);
     });
   }
 }
