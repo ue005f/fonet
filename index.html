@@ -468,6 +468,35 @@
     align-items: center;
     gap: 6px;
   }
+  /* Hero 頻道資訊列（頭貼 + 頻道名 + 觀賽中） */
+  .hero-streamer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .hero-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+  .hero-streamer-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .hero-watching-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-left: 2px;
+  }
+  /* 需要轉播權時縮小 hero-img 高度 */
+  .hero-img.compact {
+    aspect-ratio: 16/6;
+  }
   .hero-live-badge {
     background: var(--live-red);
     color: #fff;
@@ -2523,38 +2552,62 @@ function renderHeroPanel(panelId, streamer, needsCopyright) {
   const status = streamer._status || {};
   const name = streamer['頻道名稱'] || streamer['Twitch ID'] || '';
   const game = status['當前遊戲'] || streamer['主要遊戲'] || '';
-  const liveTitle = status['直播標題'] || '';
   const thumbUrl = status['縮圖 URL'] || '';
   const avatarUrl = status['頭貼 URL'] || '';
+  const eventName = window._currentLiveEvent ? (window._currentLiveEvent['名稱'] || '') : '';
+  const fallbackImg = window._currentLiveEvent ? (window._currentLiveEvent['替代圖片'] || '') : '';
+  const twitchId = String(streamer['Twitch ID'] || '').trim();
+  const ytId = String(streamer['YouTube ID'] || '').trim();
+  const platform = status['平台'] || streamer['平台'] || '';
+  const panelLabel = panelId === 'hero-official' ? '（官方主台）' : '';
 
-  // 賽程連結從當前賽事拿
-  const scheduleUrl = window._currentLiveEvent ? (window._currentLiveEvent['賽程連結'] || '') : '';
+  // 頻道連結
+  let streamUrl = '#';
+  if (platform === 'Twitch' && twitchId) streamUrl = `https://www.twitch.tv/${twitchId}`;
+  else if (platform === 'YouTube' && ytId) streamUrl = `https://www.youtube.com/@${ytId}`;
 
-  // 決定顯示縮圖還是頭貼
+  // 決定背景圖片
   const heroImg = document.querySelector('#' + panelId + ' .hero-img');
-  const artEl = document.getElementById('hero-art-text');
-  const imageToShow = needsCopyright ? avatarUrl : (thumbUrl && thumbUrl !== '-' ? thumbUrl : avatarUrl);
+  const artEl = panelId === 'hero-hot'
+    ? document.getElementById('hero-art-text')
+    : document.getElementById('hero-official-art');
 
-  if (heroImg && imageToShow) {
-    heroImg.style.backgroundImage = `url(${imageToShow})`;
-    heroImg.style.backgroundSize = 'cover';
-    heroImg.style.backgroundPosition = 'center';
+  if (heroImg) {
+    if (needsCopyright) {
+      // 需要轉播權 → 替代圖片（縮小高度），沒有替代圖片就用頭貼
+      const bgImg = fallbackImg || avatarUrl;
+      if (bgImg) {
+        heroImg.style.backgroundImage = `url(${bgImg})`;
+        heroImg.style.backgroundSize = 'cover';
+        heroImg.style.backgroundPosition = 'center';
+      }
+      heroImg.classList.add('compact'); // 縮小高度
+    } else {
+      // 不需要轉播權 → 直播縮圖（沒有就用頭貼）
+      const bgImg = (thumbUrl && thumbUrl !== '-') ? thumbUrl : avatarUrl;
+      if (bgImg) {
+        heroImg.style.backgroundImage = `url(${bgImg})`;
+        heroImg.style.backgroundSize = 'cover';
+        heroImg.style.backgroundPosition = 'center';
+      }
+      heroImg.classList.remove('compact');
+    }
+    if (artEl) artEl.style.display = 'none';
   }
-  if (artEl) artEl.style.display = 'none';
 
   const contentId = panelId === 'hero-hot' ? 'hero-hot-content' : 'hero-official-content';
   const contentEl = document.getElementById(contentId);
-  const panelLabel = panelId === 'hero-official' ? '（官方主台）' : '';
   if (contentEl) {
     contentEl.innerHTML = `
-      <div class="hero-event-name">${name}${panelLabel}</div>
-      <div class="hero-sub">
-        <span class="hero-live-badge">LIVE</span>
-        ${liveTitle || game}
+      <div class="hero-event-name">${eventName}${panelLabel}</div>
+      ${game ? `<div style="font-size:12px;color:var(--text2);margin-top:3px;">${game}</div>` : ''}
+      <div class="hero-streamer-row">
+        ${avatarUrl ? `<img src="${avatarUrl}" class="hero-avatar" onerror="this.style.display='none'">` : ''}
+        <span class="hero-streamer-name">${name}</span>
+        <span class="hero-watching-label">觀賽中</span>
       </div>
-      ${liveTitle && game ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${game}</div>` : ''}
-      <div class="hero-cta">
-        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽事詳細 →</button></a>` : `<button class="btn-ghost" onclick="showPage('events')">查看賽事</button>`}
+      <div class="hero-cta" style="margin-top:12px;">
+        <a href="${streamUrl}" target="_blank"><button class="btn-primary">一起看比賽 →</button></a>
       </div>`;
   }
 }
