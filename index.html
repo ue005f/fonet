@@ -1221,16 +1221,24 @@
         </div>
       </div>
 
-      <!-- Other streams horizontal scroll -->
+      <!-- 觀賽直播橫向滑動 -->
       <div id="home-live-scroll-section" style="display:none;">
         <div class="section-header">
           <div style="display:flex;align-items:center;gap:6px;">
             <div class="live-title-dot" id="home-scroll-dot" style="display:none;"></div>
-            <h2 id="home-scroll-title">其他直播</h2>
+            <h2 id="home-scroll-title">觀賽直播</h2>
           </div>
           <span class="more-link" id="home-scroll-more" onclick="showPage('live')">看更多 ›</span>
         </div>
         <div class="live-scroll" id="home-live-scroll"></div>
+      </div>
+
+      <!-- 官方主台橫向滑動（多個官方台時才顯示）-->
+      <div id="home-official-scroll-section" style="display:none;">
+        <div class="section-header">
+          <h2>官方主台</h2>
+        </div>
+        <div class="live-scroll" id="home-official-scroll"></div>
       </div>
 
       <!-- Currently happening -->
@@ -2522,17 +2530,29 @@ async function loadLiveStatus() {
     // Hero 區：分別傳入觀賽派對精選和官方台精選
     updateHeroTabs(featuredWatchParty, featuredOfficial);
 
-    // 其他直播橫向滑動
-    const hasFeaturedLive = featuredWatchParty || featuredOfficial;
+    // ── 橫向滑動區 ──
     const hasLiveEvent = !!(window._currentLiveEvent);
+
     if (hasLiveEvent) {
-      // 有進行中賽事：只顯示精選（排除 hero 的那兩個），標題改「其他共同觀賽」，隱藏看更多
-      updateHomeScroll(otherLive.filter(s =>
-        s['精選'] === true || s['精選'] === 'TRUE'
-      ), true, false);
+      // 有進行中賽事：觀賽直播 = 所有精選非官方台
+      const allWatchParty = liveStreamers.filter(s =>
+        (s['精選'] === true || s['精選'] === 'TRUE') &&
+        s['官方台'] !== true && s['官方台'] !== 'TRUE' && s['官方台'] !== '賽事主台'
+      );
+      updateHomeScroll(allWatchParty, true, true);
+
+      // 官方主台 = 所有精選官方台（多個才顯示這列）
+      const allOfficial = liveStreamers.filter(s =>
+        (s['精選'] === true || s['精選'] === 'TRUE') &&
+        (s['官方台'] === true || s['官方台'] === 'TRUE' || s['官方台'] === '賽事主台')
+      );
+      updateOfficialScroll(allOfficial);
     } else {
-      // 沒有進行中賽事：顯示所有在線的，標題改「LIVE」，顯示看更多
+      // 沒有進行中賽事：LIVE 列顯示所有在線的
       updateHomeScroll(liveStreamers, false, true);
+      // 隱藏官方主台列
+      const officialSection = document.getElementById('home-official-scroll-section');
+      if (officialSection) officialSection.style.display = 'none';
     }
 
     renderLiveSection(liveStreamers);
@@ -2735,7 +2755,7 @@ function updateHomeScroll(streamers, hasLiveEvent, showMore) {
 
   // 更新標題和控制元素
   if (hasLiveEvent) {
-    if (titleEl) titleEl.textContent = '其他共同觀賽';
+    if (titleEl) titleEl.textContent = '觀賽直播';
     if (dotEl) dotEl.style.display = 'none';
     if (moreEl) moreEl.style.display = 'none';
   } else {
