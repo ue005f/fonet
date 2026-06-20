@@ -1191,6 +1191,11 @@
       </div>
 
       <!-- Hero: 熱門直播 -->
+        <!-- Hero 比賽切換箭頭＋點點（多場比賽時顯示）-->
+        <div id="hero-nav" style="display:none;">
+          <div class="hero-nav-dots" id="hero-nav-dots"></div>
+        </div>
+
       </div><!-- /hero-container -->
 
       <div class="game-art-carousel" id="game-art-carousel" style="display:none;"></div>
@@ -1847,33 +1852,54 @@ async function loadHero() {
       ev['顯示'] !== false && ev['顯示'] !== 'FALSE' && ev['顯示'] !== 0
     );
 
-    // 是否有「進行中」的焦點大賽（自動依日期判斷）
-    const liveEvent = visible.find(ev =>
-      isEventLive(ev) && ev['分類'] === '焦點大賽'
-    );
+    // 找出所有「進行中」的賽事（不限分類）
+    const liveEvents = visible.filter(ev => isEventLive(ev));
 
     const heroOfficial = document.getElementById('hero-official');
     const heroTabs = document.querySelector('#page-home .tabs');
 
     // 沒有進行中的賽事 → 圖片輪播
-    if (!liveEvent) {
+    if (liveEvents.length === 0) {
       if (heroOfficial) heroOfficial.style.display = 'none';
       if (heroTabs) heroTabs.style.display = 'none';
       await loadGameArtCarousel();
       window._currentLiveEvent = null;
+      window._liveEvents = [];
+      window._heroEventIndex = 0;
       return;
     }
 
-    // 有進行中賽事 → 記錄起來給直播狀態載入時使用
+    // 記錄所有進行中賽事，預設顯示第一個
+    window._liveEvents = liveEvents;
+    window._heroEventIndex = 0;
+    const liveEvent = liveEvents[0];
     window._currentLiveEvent = liveEvent;
 
-    // 先顯示頁籤（之後依精選在線狀況決定要不要隱藏其中之一）
+    // 先顯示頁籤
     if (heroTabs) heroTabs.style.display = '';
     if (heroOfficial) heroOfficial.style.display = '';
     const heroHot = document.getElementById('hero-hot');
     if (heroHot) heroHot.style.display = '';
     const carousel = document.getElementById('game-art-carousel');
     if (carousel) carousel.style.display = 'none';
+
+    // 建立切換點點（多場比賽才顯示）
+    const heroNav = document.getElementById('hero-nav');
+    const heroNavDots = document.getElementById('hero-nav-dots');
+    if (heroNav && heroNavDots) {
+      if (liveEvents.length > 1) {
+        heroNav.style.display = '';
+        heroNavDots.innerHTML = liveEvents.map((_, i) =>
+          `<button class="hero-nav-dot${i === 0 ? ' active' : ''}" onclick="switchHeroEvent(${i === 0 ? -1 : 1})"></button>`
+        ).join('');
+        // 更正：每個點直接跳到那個 index
+        heroNavDots.innerHTML = liveEvents.map((ev, i) =>
+          `<button class="hero-nav-dot${i === 0 ? ' active' : ''}" onclick="jumpHeroEvent(${i})">${''}</button>`
+        ).join('');
+      } else {
+        heroNav.style.display = 'none';
+      }
+    }
 
     const name = liveEvent['名稱'] || '';
     const scheduleUrl = liveEvent['賽程連結'] || '';
@@ -1938,6 +1964,75 @@ async function loadHero() {
 
   } catch(e) {
     console.error('載入 Hero 失敗', e);
+  }
+}
+
+// ── 切換 Hero 比賽（左右箭頭）──
+function jumpHeroEvent(index) {
+  if (!window._liveEvents) return;
+  window._heroEventIndex = index;
+  window._currentLiveEvent = window._liveEvents[index];
+  document.querySelectorAll('.hero-nav-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === index);
+  });
+  refreshHeroContent(window._currentLiveEvent);
+}
+
+function switchHeroEvent(dir) {
+  if (!window._liveEvents || window._liveEvents.length <= 1) return;
+  const total = window._liveEvents.length;
+  window._heroEventIndex = (window._heroEventIndex + dir + total) % total;
+  window._currentLiveEvent = window._liveEvents[window._heroEventIndex];
+  // 更新點點
+  document.querySelectorAll('.hero-nav-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === window._heroEventIndex);
+  });
+  // 更新 Hero 內容
+  refreshHeroContent(window._currentLiveEvent);
+}
+
+function refreshHeroContent(liveEvent) {
+  const name = liveEvent['名稱'] || '';
+  const scheduleUrl = liveEvent['賽程連結'] || '';
+  const fallbackImg = liveEvent['替代圖片'] || '';
+  const artEl = document.getElementById('hero-art-text');
+  const officialArt = document.getElementById('hero-official-art');
+
+  heroImgReset('hero-hot');
+  heroImgReset('hero-official');
+
+  if (fallbackImg) {
+    ['#hero-hot .hero-img', '#hero-official .hero-img'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) { el.style.backgroundImage = `url(${fallbackImg})`; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center'; }
+    });
+    if (artEl) artEl.style.display = 'none';
+    if (officialArt) officialArt.style.display = 'none';
+  } else {
+    if (artEl) { artEl.textContent = name.split(' ')[0] || name; artEl.style.display = ''; }
+    if (officialArt) { officialArt.textContent = name.split(' ')[0] || name; officialArt.style.display = ''; }
+  }
+
+  const hotContent = document.getElementById('hero-hot-content');
+  if (hotContent) {
+    hotContent.innerHTML = `
+      <div class="hero-event-name">${name}</div>
+      <div class="hero-sub"><span class="hero-live-badge">LIVE</span> 目前沒有觀賽派對</div>
+      <div class="hero-cta">
+        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+        <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
+      </div>`;
+  }
+
+  const officialContent = document.getElementById('hero-official-content');
+  if (officialContent) {
+    officialContent.innerHTML = `
+      <div class="hero-event-name">${name} 官方主台</div>
+      <div class="hero-sub"><span class="hero-live-badge">LIVE</span> 目前無官方轉播</div>
+      <div class="hero-cta">
+        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+        <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
+      </div>`;
   }
 }
 
