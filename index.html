@@ -878,6 +878,13 @@
 
   /* empty space at bottom of offline */
   .spacer { height: 20px; }
+  .last-updated {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text3);
+    padding: 4px 0 16px;
+    opacity: 0.6;
+  }
 
   /* ── Skeleton loading ── */
   @keyframes skeleton-shimmer {
@@ -1286,6 +1293,7 @@
         </div>
       </div>
 
+      <div class="last-updated">最後更新：<span class="last-updated-time">--:--</span></div>
       <div class="spacer"></div>
     </div>
 
@@ -1364,6 +1372,7 @@
         </div>
       </div>
 
+      <div class="last-updated">最後更新：<span class="last-updated-time">--:--</span></div>
       <div class="spacer"></div>
     </div>
 
@@ -1463,6 +1472,7 @@
 
       </div><!-- /events-community -->
 
+      <div class="last-updated">最後更新：<span class="last-updated-time">--:--</span></div>
       <div class="spacer"></div>
     </div>
 
@@ -2612,7 +2622,9 @@ async function loadHeroThenLive() {
 
   // 判定完成後顯示 Hero 區
   const heroContainer = document.getElementById('hero-container');
-  if (heroContainer) heroContainer.classList.add('ready');
+  setTimeout(() => {
+    if (heroContainer) heroContainer.classList.add('ready');
+  }, 2500);
 }
 
 // ── Hero 區：分別更新熱門直播／賽事主台兩個頁籤 ──
@@ -3068,12 +3080,65 @@ document.addEventListener('DOMContentLoaded', function() {
   loadHomeEvents();
   loadEventsPage();
   loadBanners();
-  // Hero 和直播狀態需要協調：先載入賽事 Hero，直播狀態載入後再覆蓋
   loadHeroThenLive();
   shuffleLiveCards();
   // 瀏覽器上一頁/下一頁
   window.addEventListener('popstate', initPageFromHash);
+
+  // ── 自動重新整理 ──
+
+  // 直播狀態：每 5 分鐘（跟 Apps Script 同步）
+  setInterval(() => {
+    loadHeroThenLive();
+    updateLastUpdated();
+  }, 5 * 60 * 1000);
+
+  // 賽事資料：對準每小時的 X:10 和 X:40
+  function scheduleEventRefresh() {
+    const now = new Date();
+    const min = now.getMinutes();
+    const sec = now.getSeconds();
+    const ms = now.getMilliseconds();
+
+    // 計算距離下一個 X:10 或 X:40 的毫秒數
+    let nextMin;
+    if (min < 10) nextMin = 10;
+    else if (min < 40) nextMin = 40;
+    else nextMin = 70; // 下一個小時的 X:10
+
+    const waitMs = ((nextMin - min) * 60 - sec) * 1000 - ms;
+
+    setTimeout(() => {
+      loadHomeEvents();
+      loadEventsPage();
+      loadBanners();
+      updateLastUpdated();
+      // 之後每 30 分鐘重複
+      setInterval(() => {
+        loadHomeEvents();
+        loadEventsPage();
+        loadBanners();
+        updateLastUpdated();
+      }, 30 * 60 * 1000);
+    }, waitMs);
+  }
+  scheduleEventRefresh();
+
+  // 初始顯示最後更新時間
+  updateLastUpdated();
 });
+
+// ── 最後更新時間 ──
+function updateLastUpdated() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const timeStr = `${hh}:${mm}`;
+  document.querySelectorAll('.last-updated-time').forEach(el => {
+    el.textContent = timeStr;
+  });
+}
+
 
 </script>
 </body>
