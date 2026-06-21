@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>623Hub — FGC 原型</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>623Hub — 台灣格鬥遊戲賽事與直播資訊</title>
 <style>
   :root {
     --bg: #0B1020;
@@ -1147,10 +1150,9 @@
     touch-action: none; /* 但只攔截點擊，不攔截捲動 */
   }
 
-  /* 展開時卡片輕微高亮（不閃爍） */
+  /* 展開時卡片不做額外高亮 */
   .event-card.expanded {
-    border-color: rgba(168,85,247,0.15);
-    transition: border-color 0.2s ease;
+    border-color: rgba(255,255,255,0.08);
   }
   .detail-link {
     display: flex;
@@ -1197,40 +1199,14 @@
 
       <!-- Hero container (hidden until ready) -->
       <div id="hero-container" class="hero-container">
-
-      <!-- Tabs -->
-      <div class="tabs">
-        <div class="tab active" onclick="switchHeroTab(this, 'hot')">熱門直播</div>
-        <div class="tab" onclick="switchHeroTab(this, 'official')">賽事主台</div>
-      </div>
-
-      <!-- Hero: 熱門直播 -->
-      <div class="hero hero-panel" id="hero-hot">
-        <div class="hero-img">
-          <div class="hero-art" id="hero-art-text">FGC</div>
-          <div class="hero-gradient"></div>
+        <!-- 輪播軌道：由 JS 動態填入比賽卡片 -->
+        <div class="hero-track-wrap">
+          <div class="hero-track" id="hero-track"></div>
         </div>
-        <div class="hero-content" id="hero-hot-content">
-          <div class="hero-event-name">載入中…</div>
-        </div>
-      </div>
-
-      <!-- Hero: 賽事主台 -->
-      <div class="hero hero-panel" id="hero-official" style="display:none;">
-        <div class="hero-img" style="background: linear-gradient(135deg, #1a1030 0%, #0d0820 50%, #1a1030 100%);">
-          <div class="hero-art" style="font-size:52px; letter-spacing:-2px;" id="hero-official-art">FGC</div>
-          <div class="hero-gradient"></div>
-        </div>
-        <div class="hero-content" id="hero-official-content">
-          <div class="hero-event-name">載入中…</div>
-        </div>
-      </div>
-
-        <!-- Hero 比賽切換點點（多場比賽時顯示）-->
+        <!-- 底部點點 -->
         <div id="hero-nav" style="display:none;">
           <div class="hero-nav-dots" id="hero-nav-dots"></div>
         </div>
-
       </div><!-- /hero-container -->
 
       <div class="game-art-carousel" id="game-art-carousel" style="display:none;"></div>
@@ -1747,17 +1723,27 @@ function toggleOffline(btn) {
   btn.classList.toggle('open', !isOpen);
 }
 
-function switchHeroTab(tabEl, panelId) {
-  // Update tab styles
+function switchHeroTab(tabEl, panelId, slideIndex) {
   tabEl.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   tabEl.classList.add('active');
-  // Switch hero panels
-  document.querySelectorAll('.hero-panel').forEach(p => p.style.display = 'none');
-  document.getElementById('hero-' + panelId).style.display = 'block';
+  const idx = slideIndex !== undefined ? slideIndex : (window._heroEventIndex || 0);
+  const hot = document.getElementById('hero-hot-' + idx);
+  const official = document.getElementById('hero-official-' + idx);
+  if (panelId === 'hot') {
+    if (hot) hot.style.display = '';
+    if (official) official.style.display = 'none';
+  } else {
+    if (hot) hot.style.display = 'none';
+    if (official) official.style.display = '';
+  }
 }
 
 // 點卡片任何地方：收起時展開，展開時收起
-function handleCardClick(cardEl) {
+function handleCardClick(cardEl, event) {
+  // 如果點擊的是 detail-link 或其子元素，由 toggleExpand 處理，這裡不重複觸發
+  if (event && event.target.closest('.detail-link')) return;
+  // 如果點擊的是賽程表按鈕，不觸發展開
+  if (event && event.target.closest('a[href]')) return;
   const isOpen = cardEl.classList.contains('expanded');
   if (isOpen) {
     closeExpand(cardEl);
@@ -1767,10 +1753,17 @@ function handleCardClick(cardEl) {
   }
 }
 
-// 點「詳細」按鈕也觸發同樣邏輯
-function toggleExpand(linkEl) {
+// 點「詳細」按鈕：stopPropagation 避免同時觸發 handleCardClick
+function toggleExpand(linkEl, event) {
+  if (event) event.stopPropagation();
   const card = linkEl.closest('.event-card');
-  handleCardClick(card);
+  const isOpen = card.classList.contains('expanded');
+  if (isOpen) {
+    closeExpand(card);
+  } else {
+    closeAllExpands();
+    openExpand(card);
+  }
 }
 
 function openExpand(card) {
@@ -1900,31 +1893,11 @@ async function loadHero() {
     const liveEvent = liveEvents[0];
     window._currentLiveEvent = liveEvent;
 
-    // 先顯示頁籤
-    if (heroTabs) heroTabs.style.display = '';
-    if (heroOfficial) heroOfficial.style.display = '';
-    const heroHot = document.getElementById('hero-hot');
-    if (heroHot) heroHot.style.display = '';
     const carousel = document.getElementById('game-art-carousel');
     if (carousel) carousel.style.display = 'none';
 
-    // 建立切換點點（多場比賽才顯示）
-    const heroNav = document.getElementById('hero-nav');
-    const heroNavDots = document.getElementById('hero-nav-dots');
-    if (heroNav && heroNavDots) {
-      if (liveEvents.length > 1) {
-        heroNav.style.display = '';
-        heroNavDots.innerHTML = liveEvents.map((_, i) =>
-          `<button class="hero-nav-dot${i === 0 ? ' active' : ''}" onclick="switchHeroEvent(${i === 0 ? -1 : 1})"></button>`
-        ).join('');
-        // 更正：每個點直接跳到那個 index
-        heroNavDots.innerHTML = liveEvents.map((ev, i) =>
-          `<button class="hero-nav-dot${i === 0 ? ' active' : ''}" onclick="jumpHeroEvent(${i})">${''}</button>`
-        ).join('');
-      } else {
-        heroNav.style.display = 'none';
-      }
-    }
+    // 建立輪播軌道
+    buildHeroTrack(liveEvents);
 
     const name = liveEvent['名稱'] || '';
     const scheduleUrl = liveEvent['賽程連結'] || '';
@@ -1995,13 +1968,28 @@ async function loadHero() {
 // ── 切換 Hero 比賽（左右箭頭）──
 function jumpHeroEvent(index) {
   if (!window._liveEvents) return;
+  const total = window._liveEvents.length;
   window._heroEventIndex = index;
   window._currentLiveEvent = window._liveEvents[index];
+
+  // 更新點點
   document.querySelectorAll('.hero-nav-dot').forEach((d, i) => {
     d.classList.toggle('active', i === index);
   });
-  refreshHeroContent(window._currentLiveEvent);
-  // 重新計算這場比賽對應的精選頻道
+
+  // 更新 slide 狀態（active = 置中，其他淡化）
+  document.querySelectorAll('.hero-slide').forEach((s, i) => {
+    s.classList.toggle('active', i === index);
+  });
+
+  // 移動軌道（每張 slide 寬度約 85% + gap 12px，padding 補正）
+  const track = document.getElementById('hero-track');
+  if (track) {
+    const slideWidth = track.parentElement.offsetWidth * 0.85 + 12;
+    track.style.transform = `translateX(${-index * slideWidth}px)`;
+  }
+
+  // 重新計算精選頻道
   if (window._cachedLiveStreamers) {
     updateHeroForEvent(window._cachedLiveStreamers);
   }
@@ -2353,7 +2341,7 @@ function renderEventCard(ev, isTwFiltered) {
   }
 
   const detailSection = detail ? `
-        <div class="detail-link" onclick="toggleExpand(this)">
+        <div class="detail-link" onclick="toggleExpand(this, event)">
           詳細 <i class="detail-arrow">›</i>
         </div>
         <div class="event-expand">
@@ -2367,7 +2355,7 @@ function renderEventCard(ev, isTwFiltered) {
     : '';
 
   return `
-      <div class="event-card" data-tw="${isTW}" onclick="handleCardClick(this)" style="cursor:pointer;">
+      <div class="event-card" data-tw="${isTW}" onclick="handleCardClick(this, event)" style="cursor:pointer;">
         <div class="event-card-top">
           <div class="event-card-left">
             <div class="event-tags">${tags.join('')}</div>
@@ -2601,7 +2589,87 @@ async function loadLiveStatus() {
   }
 }
 
-// 切換比賽時重新計算 Hero 的精選頻道
+// ── 建立 Hero 輪播軌道 ──
+function buildHeroTrack(liveEvents) {
+  const track = document.getElementById('hero-track');
+  const heroNav = document.getElementById('hero-nav');
+  const heroNavDots = document.getElementById('hero-nav-dots');
+  if (!track) return;
+
+  // 為每場比賽建立一張 slide
+  track.innerHTML = liveEvents.map((ev, i) => {
+    const name = ev['名稱'] || '';
+    const fallbackImg = ev['替代圖片'] || '';
+    const bgStyle = fallbackImg
+      ? `background-image:url(${fallbackImg});background-size:cover;background-position:center;`
+      : 'background: linear-gradient(135deg, #1a2240 0%, #0d1830 50%, #1a2840 100%);';
+
+    return `
+      <div class="hero-slide${i === 0 ? ' active' : ''}" data-index="${i}">
+        <div class="tabs" id="hero-tabs-${i}">
+          <div class="tab active" onclick="switchHeroTab(this,'hot',${i})">熱門直播</div>
+          <div class="tab" onclick="switchHeroTab(this,'official',${i})">賽事主台</div>
+        </div>
+        <div class="hero hero-panel" id="hero-hot-${i}">
+          <div class="hero-img" id="hero-img-hot-${i}" style="${bgStyle}">
+            <div class="hero-art" id="hero-art-${i}">${name.split(' ')[0] || 'FGC'}</div>
+            <div class="hero-gradient"></div>
+          </div>
+          <div class="hero-content" id="hero-hot-content-${i}">
+            <div class="hero-event-name">${name}</div>
+            <div class="hero-sub"><span class="hero-live-badge">LIVE</span> 載入中…</div>
+          </div>
+        </div>
+        <div class="hero hero-panel" id="hero-official-${i}" style="display:none;">
+          <div class="hero-img" id="hero-img-official-${i}" style="background:linear-gradient(135deg,#1a1030,#0d0820);">
+            <div class="hero-art" id="hero-official-art-${i}">${name.split(' ')[0] || 'FGC'}</div>
+            <div class="hero-gradient"></div>
+          </div>
+          <div class="hero-content" id="hero-official-content-${i}">
+            <div class="hero-event-name">${name}（官方主台）</div>
+            <div class="hero-sub"><span class="hero-live-badge">LIVE</span> 載入中…</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // 點點
+  if (liveEvents.length > 1) {
+    heroNav.style.display = '';
+    heroNavDots.innerHTML = liveEvents.map((_, i) =>
+      `<button class="hero-nav-dot${i === 0 ? ' active' : ''}" onclick="jumpHeroEvent(${i})"></button>`
+    ).join('');
+  } else {
+    heroNav.style.display = 'none';
+  }
+
+  // 初始化 touch 滑動
+  initHeroSwipe(track, liveEvents.length);
+}
+
+// ── Touch 滑動支援 ──
+function initHeroSwipe(track, total) {
+  let startX = 0;
+  let isDragging = false;
+
+  track.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+  }, { passive: true });
+
+  track.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      const dir = diff > 0 ? 1 : -1;
+      const next = Math.max(0, Math.min(total - 1, window._heroEventIndex + dir));
+      jumpHeroEvent(next);
+    }
+  }, { passive: true });
+}
+
+// 重新計算這場比賽對應的精選頻道
 function updateHeroForEvent(liveStreamers) {
   const currentEventName = window._currentLiveEvent ? (window._currentLiveEvent['名稱'] || '') : '';
   const hasMultipleEvents = window._liveEvents && window._liveEvents.length > 1;
@@ -2688,48 +2756,40 @@ async function loadHeroThenLive() {
   const heroContainer = document.getElementById('hero-container');
   setTimeout(() => {
     if (heroContainer) heroContainer.classList.add('ready');
-  }, 500);
+  }, 2500);
 }
 
 // ── Hero 區：分別更新熱門直播／賽事主台兩個頁籤 ──
 async function updateHeroTabs(watchPartyStreamer, officialStreamer) {
-  const heroTabs = document.querySelector('#page-home .tabs');
-  const tabHot = heroTabs ? heroTabs.querySelector('.tab[onclick*="hot"]') : null;
-  const tabOfficial = heroTabs ? heroTabs.querySelector('.tab[onclick*="official"]') : null;
-  const heroHot = document.getElementById('hero-hot');
-  const heroOfficial = document.getElementById('hero-official');
+  if (!window._currentLiveEvent) return;
 
-  // 沒有進行中賽事 → 完全隱藏 Hero 區（輪播圖已由 loadGameArtCarousel 處理）
-  if (!window._currentLiveEvent) {
-    if (heroTabs) heroTabs.style.display = 'none';
-    if (heroHot) heroHot.style.display = 'none';
-    if (heroOfficial) heroOfficial.style.display = 'none';
-    return;
-  }
+  const idx = window._heroEventIndex || 0;
+  const needsCopyright = window._currentLiveEvent['需要轉播權'] === true ||
+    window._currentLiveEvent['需要轉播權'] === 'TRUE';
 
-  const needsCopyright = window._currentLiveEvent &&
-    (window._currentLiveEvent['需要轉播權'] === true || window._currentLiveEvent['需要轉播權'] === 'TRUE');
+  const tabContainer = document.getElementById(`hero-tabs-${idx}`);
+  const tabHot = tabContainer ? tabContainer.querySelector('.tab:nth-child(1)') : null;
+  const tabOfficial = tabContainer ? tabContainer.querySelector('.tab:nth-child(2)') : null;
+  const heroHot = document.getElementById(`hero-hot-${idx}`);
+  const heroOfficial = document.getElementById(`hero-official-${idx}`);
 
-  // 熱門直播頁籤
   if (watchPartyStreamer) {
     if (tabHot) { tabHot.style.display = ''; tabHot.classList.add('active'); }
     if (heroHot) heroHot.style.display = '';
-    renderHeroPanel('hero-hot', watchPartyStreamer, needsCopyright);
+    renderHeroPanel(`hero-hot-${idx}`, watchPartyStreamer, needsCopyright, idx);
   } else {
     if (tabHot) { tabHot.style.display = 'none'; tabHot.classList.remove('active'); }
     if (heroHot) heroHot.style.display = 'none';
   }
 
-  // 賽事主台頁籤
   if (officialStreamer) {
     if (tabOfficial) { tabOfficial.style.display = ''; }
-    renderHeroPanel('hero-official', officialStreamer, needsCopyright);
+    renderHeroPanel(`hero-official-${idx}`, officialStreamer, needsCopyright, idx);
   } else {
     if (tabOfficial) { tabOfficial.style.display = 'none'; }
     if (heroOfficial) heroOfficial.style.display = 'none';
   }
 
-  // 決定預設顯示哪個頁籤
   if (watchPartyStreamer) {
     if (heroHot) heroHot.style.display = '';
     if (heroOfficial) heroOfficial.style.display = 'none';
@@ -2742,12 +2802,12 @@ async function updateHeroTabs(watchPartyStreamer, officialStreamer) {
     if (tabHot) tabHot.classList.remove('active');
   }
 
-  // 至少有一個在線才顯示頁籤列
-  if (heroTabs) heroTabs.style.display = (watchPartyStreamer || officialStreamer) ? '' : 'none';
+  if (tabContainer) tabContainer.style.display = (watchPartyStreamer || officialStreamer) ? '' : 'none';
 }
 
 // 渲染 Hero 面板
-function renderHeroPanel(panelId, streamer, needsCopyright) {
+function renderHeroPanel(panelId, streamer, needsCopyright, slideIdx) {
+  const idx = slideIdx !== undefined ? slideIdx : (window._heroEventIndex || 0);
   const status = streamer._status || {};
   const name = streamer['頻道名稱'] || streamer['Twitch ID'] || '';
   const game = status['當前遊戲'] || streamer['主要遊戲'] || '';
@@ -2766,7 +2826,7 @@ function renderHeroPanel(panelId, streamer, needsCopyright) {
   else if (platform === 'YouTube' && ytId) streamUrl = `https://www.youtube.com/@${ytId}`;
 
   // 決定背景圖片
-  const heroImg = document.querySelector('#' + panelId + ' .hero-img');
+  const heroImg = document.getElementById(isHot ? `hero-img-hot-${idx}` : `hero-img-official-${idx}`);
   const artEl = panelId === 'hero-hot'
     ? document.getElementById('hero-art-text')
     : document.getElementById('hero-official-art');
@@ -2794,7 +2854,7 @@ function renderHeroPanel(panelId, streamer, needsCopyright) {
     if (artEl) artEl.style.display = 'none';
   }
 
-  const contentId = panelId === 'hero-hot' ? 'hero-hot-content' : 'hero-official-content';
+  const contentId = isHot ? `hero-hot-content-${idx}` : `hero-official-content-${idx}`;
   const contentEl = document.getElementById(contentId);
   if (contentEl) {
     contentEl.innerHTML = `
@@ -3170,40 +3230,4 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (min < 40) nextMin = 40;
     else nextMin = 70; // 下一個小時的 X:10
 
-    const waitMs = ((nextMin - min) * 60 - sec) * 1000 - ms;
-
-    setTimeout(() => {
-      loadHomeEvents();
-      loadEventsPage();
-      loadBanners();
-      updateLastUpdated();
-      // 之後每 30 分鐘重複
-      setInterval(() => {
-        loadHomeEvents();
-        loadEventsPage();
-        loadBanners();
-        updateLastUpdated();
-      }, 30 * 60 * 1000);
-    }, waitMs);
-  }
-  scheduleEventRefresh();
-
-  // 初始顯示最後更新時間
-  updateLastUpdated();
-});
-
-// ── 最後更新時間 ──
-function updateLastUpdated() {
-  const now = new Date();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  const timeStr = `${hh}:${mm}`;
-  document.querySelectorAll('.last-updated-time').forEach(el => {
-    el.textContent = timeStr;
-  });
-}
-
-
-</script>
-</body>
-</html>
+    const waitMs = ((nextMi
