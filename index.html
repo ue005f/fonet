@@ -397,6 +397,13 @@
   /* ── HOMEPAGE ── */
 
   /* Hero */
+  .hero-container {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .hero-container.ready {
+    opacity: 1;
+  }
   .hero {
     position: relative;
     margin: 12px 18px 0;
@@ -1994,6 +2001,10 @@ function jumpHeroEvent(index) {
     d.classList.toggle('active', i === index);
   });
   refreshHeroContent(window._currentLiveEvent);
+  // 重新計算這場比賽對應的精選頻道
+  if (window._cachedLiveStreamers) {
+    updateHeroForEvent(window._cachedLiveStreamers);
+  }
 }
 
 function switchHeroEvent(dir) {
@@ -2508,23 +2519,37 @@ async function loadLiveStatus() {
     });
 
     // 分出精選頻道，依觀看人數排序，官方台和非官方台各取最高的
+    // 若有多場比賽，依「精選賽事」欄位對應當前顯示的比賽
     const sortByViewers = arr => [...arr].sort((a, b) => {
       const va = Number((a._status || {})['觀看人數'] || 0);
       const vb = Number((b._status || {})['觀看人數'] || 0);
       return vb - va;
     });
 
+    const currentEventName = window._currentLiveEvent ? (window._currentLiveEvent['名稱'] || '') : '';
+    const hasMultipleEvents = window._liveEvents && window._liveEvents.length > 1;
+
+    // 篩選精選頻道：若有多場比賽，只取「精選賽事」欄位對應當前比賽的頻道
+    // 只有一場比賽或「精選賽事」為空時，不限制
+    function matchesCurrentEvent(s) {
+      if (!hasMultipleEvents) return true;
+      const featuredEvent = (s['精選賽事'] || '').trim();
+      return !featuredEvent || featuredEvent === currentEventName;
+    }
+
     const featuredWatchParty = sortByViewers(
       liveStreamers.filter(s =>
         (s['精選'] === true || s['精選'] === 'TRUE') &&
-        s['官方台'] !== true && s['官方台'] !== 'TRUE' && s['官方台'] !== '賽事主台'
+        s['官方台'] !== true && s['官方台'] !== 'TRUE' && s['官方台'] !== '賽事主台' &&
+        matchesCurrentEvent(s)
       )
     )[0] || null;
 
     const featuredOfficial = sortByViewers(
       liveStreamers.filter(s =>
         (s['精選'] === true || s['精選'] === 'TRUE') &&
-        (s['官方台'] === true || s['官方台'] === 'TRUE' || s['官方台'] === '賽事主台')
+        (s['官方台'] === true || s['官方台'] === 'TRUE' || s['官方台'] === '賽事主台') &&
+        matchesCurrentEvent(s)
       )
     )[0] || null;
 
@@ -2544,7 +2569,7 @@ async function loadLiveStatus() {
     const hasLiveEvent = !!(window._currentLiveEvent);
 
     if (hasLiveEvent) {
-      // 有進行中賽事：觀賽直播 = 所有精選非官方台
+      // 觀賽直播 = 所有精選非官方台（不限賽事，全放一起）
       const allWatchParty = liveStreamers.filter(s =>
         (s['精選'] === true || s['精選'] === 'TRUE') &&
         s['官方台'] !== true && s['官方台'] !== 'TRUE' && s['官方台'] !== '賽事主台'
@@ -2565,12 +2590,51 @@ async function loadLiveStatus() {
       if (officialSection) officialSection.style.display = 'none';
     }
 
+    // 快取 liveStreamers 供切換比賽時重用
+    window._cachedLiveStreamers = liveStreamers;
+
     renderLiveSection(liveStreamers);
     renderOfflineSection(offlineStreamers, visible.length);
 
   } catch(e) {
     console.error('載入直播狀態失敗', e);
   }
+}
+
+// 切換比賽時重新計算 Hero 的精選頻道
+function updateHeroForEvent(liveStreamers) {
+  const currentEventName = window._currentLiveEvent ? (window._currentLiveEvent['名稱'] || '') : '';
+  const hasMultipleEvents = window._liveEvents && window._liveEvents.length > 1;
+
+  function matchesCurrentEvent(s) {
+    if (!hasMultipleEvents) return true;
+    const featuredEvent = (s['精選賽事'] || '').trim();
+    return !featuredEvent || featuredEvent === currentEventName;
+  }
+
+  const sortByViewers = arr => [...arr].sort((a, b) => {
+    const va = Number((a._status || {})['觀看人數'] || 0);
+    const vb = Number((b._status || {})['觀看人數'] || 0);
+    return vb - va;
+  });
+
+  const featuredWatchParty = sortByViewers(
+    liveStreamers.filter(s =>
+      (s['精選'] === true || s['精選'] === 'TRUE') &&
+      s['官方台'] !== true && s['官方台'] !== 'TRUE' && s['官方台'] !== '賽事主台' &&
+      matchesCurrentEvent(s)
+    )
+  )[0] || null;
+
+  const featuredOfficial = sortByViewers(
+    liveStreamers.filter(s =>
+      (s['精選'] === true || s['精選'] === 'TRUE') &&
+      (s['官方台'] === true || s['官方台'] === 'TRUE' || s['官方台'] === '賽事主台') &&
+      matchesCurrentEvent(s)
+    )
+  )[0] || null;
+
+  updateHeroTabs(featuredWatchParty, featuredOfficial);
 }
 
 function renderLiveCard(s) {
