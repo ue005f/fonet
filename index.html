@@ -3230,4 +3230,40 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (min < 40) nextMin = 40;
     else nextMin = 70; // 下一個小時的 X:10
 
-    const waitMs = ((nextMi
+    const waitMs = ((nextMin - min) * 60 - sec) * 1000 - ms;
+
+    setTimeout(() => {
+      loadHomeEvents();
+      loadEventsPage();
+      loadBanners();
+      updateLastUpdated();
+      // 之後每 30 分鐘重複
+      setInterval(() => {
+        loadHomeEvents();
+        loadEventsPage();
+        loadBanners();
+        updateLastUpdated();
+      }, 30 * 60 * 1000);
+    }, waitMs);
+  }
+  scheduleEventRefresh();
+
+  // 初始顯示最後更新時間
+  updateLastUpdated();
+});
+
+// ── 最後更新時間 ──
+function updateLastUpdated() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const timeStr = `${hh}:${mm}`;
+  document.querySelectorAll('.last-updated-time').forEach(el => {
+    el.textContent = timeStr;
+  });
+}
+
+
+</script>
+</body>
+</html>
