@@ -407,6 +407,44 @@
   .hero-container.ready {
     opacity: 1;
   }
+
+  /* ── Hero peek carousel ── */
+  .hero-track-wrap {
+    overflow: hidden;
+    padding: 12px 0 0;
+  }
+  .hero-track {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    padding: 0 7.5%;
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+    touch-action: pan-y;
+  }
+  .hero-slide {
+    flex: 0 0 85%;
+    min-width: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--card);
+    opacity: 0.5;
+    transform: scale(0.97);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .hero-slide.active {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .hero-slide .tabs {
+    padding: 0 12px;
+    margin: 0;
+  }
+  .hero-slide .hero {
+    margin: 0;
+    border-radius: 0;
+  }
+
   .hero {
     position: relative;
     margin: 12px 18px 0;
@@ -1904,61 +1942,62 @@ async function loadHero() {
     const fallbackImg = liveEvent['替代圖片'] || '';
 
     // 預設先顯示賽事靜態資訊（之後 updateHeroTabs 會視在線狀況覆蓋）
-    const artEl = document.getElementById('hero-art-text');
-    heroImgReset('hero-hot');
-    if (fallbackImg) {
-      const heroImg = document.querySelector('#hero-hot .hero-img');
-      if (heroImg) {
-        heroImg.style.backgroundImage = `url(${fallbackImg})`;
-        heroImg.style.backgroundSize = 'cover';
-        heroImg.style.backgroundPosition = 'center';
+    // buildHeroTrack 已建好 slides，逐一更新每個 slide 的靜態內容
+    liveEvents.forEach((ev, i) => {
+      const evName = ev['名稱'] || '';
+      const evScheduleUrl = ev['賽程連結'] || '';
+      const evFallbackImg = ev['替代圖片'] || '';
+
+      const artEl = document.getElementById(`hero-art-${i}`);
+      const heroImgEl = document.getElementById(`hero-img-hot-${i}`);
+      if (evFallbackImg && heroImgEl) {
+        heroImgEl.style.backgroundImage = `url(${evFallbackImg})`;
+        heroImgEl.style.backgroundSize = 'cover';
+        heroImgEl.style.backgroundPosition = 'center';
+        if (artEl) artEl.style.display = 'none';
+      } else {
+        if (artEl) { artEl.textContent = evName.split(' ')[0] || evName; artEl.style.display = ''; }
       }
-      if (artEl) artEl.style.display = 'none';
-    } else {
-      if (artEl) { artEl.textContent = name.split(' ')[0] || name; artEl.style.display = ''; }
-    }
 
-    const hotContent = document.getElementById('hero-hot-content');
-    if (hotContent) {
-      hotContent.innerHTML = `
-        <div class="hero-event-name">${name}</div>
-        <div class="hero-sub">
-          <span class="hero-live-badge">LIVE</span>
-          目前沒有觀賽派對
-        </div>
-        <div class="hero-cta">
-          ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
-          <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
-        </div>`;
-    }
-
-    const officialArt = document.getElementById('hero-official-art');
-    heroImgReset('hero-official');
-    if (fallbackImg) {
-      const heroOfficialImg = document.querySelector('#hero-official .hero-img');
-      if (heroOfficialImg) {
-        heroOfficialImg.style.backgroundImage = `url(${fallbackImg})`;
-        heroOfficialImg.style.backgroundSize = 'cover';
-        heroOfficialImg.style.backgroundPosition = 'center';
+      const hotContent = document.getElementById(`hero-hot-content-${i}`);
+      if (hotContent) {
+        hotContent.innerHTML = `
+          <div class="hero-event-name">${evName}</div>
+          <div class="hero-sub">
+            <span class="hero-live-badge">LIVE</span>
+            目前沒有觀賽派對
+          </div>
+          <div class="hero-cta">
+            ${evScheduleUrl ? `<a href="${evScheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+            <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
+          </div>`;
       }
-      if (officialArt) officialArt.style.display = 'none';
-    } else {
-      if (officialArt) { officialArt.textContent = name.split(' ')[0] || name; officialArt.style.display = ''; }
-    }
 
-    const officialContent = document.getElementById('hero-official-content');
-    if (officialContent) {
-      officialContent.innerHTML = `
-        <div class="hero-event-name">${name} 官方主台</div>
-        <div class="hero-sub">
-          <span class="hero-live-badge">LIVE</span>
-          目前無官方轉播
-        </div>
-        <div class="hero-cta">
-          ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
-          <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
-        </div>`;
-    }
+      const officialArt = document.getElementById(`hero-official-art-${i}`);
+      const officialImgEl = document.getElementById(`hero-img-official-${i}`);
+      if (evFallbackImg && officialImgEl) {
+        officialImgEl.style.backgroundImage = `url(${evFallbackImg})`;
+        officialImgEl.style.backgroundSize = 'cover';
+        officialImgEl.style.backgroundPosition = 'center';
+        if (officialArt) officialArt.style.display = 'none';
+      } else {
+        if (officialArt) { officialArt.textContent = evName.split(' ')[0] || evName; officialArt.style.display = ''; }
+      }
+
+      const officialContent = document.getElementById(`hero-official-content-${i}`);
+      if (officialContent) {
+        officialContent.innerHTML = `
+          <div class="hero-event-name">${evName}（官方主台）</div>
+          <div class="hero-sub">
+            <span class="hero-live-badge">LIVE</span>
+            目前無官方轉播
+          </div>
+          <div class="hero-cta">
+            ${evScheduleUrl ? `<a href="${evScheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+            <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
+          </div>`;
+      }
+    });
 
   } catch(e) {
     console.error('載入 Hero 失敗', e);
@@ -2009,18 +2048,18 @@ function switchHeroEvent(dir) {
 }
 
 function refreshHeroContent(liveEvent) {
+  const idx = window._heroEventIndex || 0;
   const name = liveEvent['名稱'] || '';
   const scheduleUrl = liveEvent['賽程連結'] || '';
   const fallbackImg = liveEvent['替代圖片'] || '';
-  const artEl = document.getElementById('hero-art-text');
-  const officialArt = document.getElementById('hero-official-art');
 
-  heroImgReset('hero-hot');
-  heroImgReset('hero-official');
+  const artEl = document.getElementById(`hero-art-${idx}`);
+  const officialArt = document.getElementById(`hero-official-art-${idx}`);
+  const heroImgEl = document.getElementById(`hero-img-hot-${idx}`);
+  const officialImgEl = document.getElementById(`hero-img-official-${idx}`);
 
   if (fallbackImg) {
-    ['#hero-hot .hero-img', '#hero-official .hero-img'].forEach(sel => {
-      const el = document.querySelector(sel);
+    [heroImgEl, officialImgEl].forEach(el => {
       if (el) { el.style.backgroundImage = `url(${fallbackImg})`; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center'; }
     });
     if (artEl) artEl.style.display = 'none';
@@ -2030,7 +2069,7 @@ function refreshHeroContent(liveEvent) {
     if (officialArt) { officialArt.textContent = name.split(' ')[0] || name; officialArt.style.display = ''; }
   }
 
-  const hotContent = document.getElementById('hero-hot-content');
+  const hotContent = document.getElementById(`hero-hot-content-${idx}`);
   if (hotContent) {
     hotContent.innerHTML = `
       <div class="hero-event-name">${name}</div>
@@ -2041,10 +2080,10 @@ function refreshHeroContent(liveEvent) {
       </div>`;
   }
 
-  const officialContent = document.getElementById('hero-official-content');
+  const officialContent = document.getElementById(`hero-official-content-${idx}`);
   if (officialContent) {
     officialContent.innerHTML = `
-      <div class="hero-event-name">${name} 官方主台</div>
+      <div class="hero-event-name">${name}（官方主台）</div>
       <div class="hero-sub"><span class="hero-live-badge">LIVE</span> 目前無官方轉播</div>
       <div class="hero-cta">
         ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
@@ -2827,9 +2866,7 @@ function renderHeroPanel(panelId, streamer, needsCopyright, slideIdx) {
 
   // 決定背景圖片
   const heroImg = document.getElementById(isHot ? `hero-img-hot-${idx}` : `hero-img-official-${idx}`);
-  const artEl = panelId === 'hero-hot'
-    ? document.getElementById('hero-art-text')
-    : document.getElementById('hero-official-art');
+  const artEl = document.getElementById(isHot ? `hero-art-${idx}` : `hero-official-art-${idx}`);
 
   if (heroImg) {
     if (needsCopyright) {
