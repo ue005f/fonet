@@ -2021,11 +2021,14 @@ function jumpHeroEvent(index) {
     s.classList.toggle('active', i === index);
   });
 
-  // 移動軌道（每張 slide 寬度約 85% + gap 12px，padding 補正）
+  // 移動軌道：直接量測目標 slide 的實際位置與寬度，再置中
+  // （改用 offsetLeft/offsetWidth 取代百分比估算，避免估算誤差隨 index 累積放大）
   const track = document.getElementById('hero-track');
-  if (track) {
-    const slideWidth = track.parentElement.offsetWidth * 0.85 + 12;
-    track.style.transform = `translateX(${-index * slideWidth}px)`;
+  const targetSlide = track ? track.children[index] : null;
+  if (track && targetSlide) {
+    const wrapWidth = track.parentElement.offsetWidth;
+    const offset = (wrapWidth / 2) - (targetSlide.offsetLeft + targetSlide.offsetWidth / 2);
+    track.style.transform = `translateX(${offset}px)`;
   }
 
   // 重新計算精選頻道
