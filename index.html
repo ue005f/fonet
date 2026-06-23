@@ -2857,7 +2857,8 @@ function renderHeroPanel(panelId, streamer, needsCopyright, slideIdx) {
   const twitchId = String(streamer['Twitch ID'] || '').trim();
   const ytId = String(streamer['YouTube ID'] || '').trim();
   const platform = status['平台'] || streamer['平台'] || '';
-  const panelLabel = panelId === 'hero-official' ? '（官方主台）' : '';
+  const isHot = !panelId.includes('official');
+  const panelLabel = panelId.includes('official') ? '（官方主台）' : '';
 
   // 頻道連結
   let streamUrl = '#';
@@ -2956,6 +2957,59 @@ function updateHomeScroll(streamers, hasLiveEvent, showMore) {
 
     // 依轉播權決定顯示縮圖或頭貼
     const imgUrl = (hasLiveEvent && needsCopyright)
+      ? avatarUrl
+      : (thumbUrl && thumbUrl !== '-' ? thumbUrl : avatarUrl);
+
+    return `
+      <a href="${url}" target="_blank" style="text-decoration:none;">
+        <div class="live-scroll-card">
+          <div class="live-scroll-thumb">
+            ${imgUrl
+              ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;">`
+              : `<span style="font-size:28px;color:rgba(255,255,255,0.15);">🎮</span>`}
+            <div class="live-dot">LIVE</div>
+          </div>
+          <div class="live-scroll-info">
+            <div class="live-scroll-name">${name}</div>
+            <div class="live-scroll-game">${game}</div>
+          </div>
+        </div>
+      </a>`;
+  }).join('');
+
+  section.style.display = '';
+}
+
+// ── 官方主台橫向滑動（多個官方台時才顯示）──
+function updateOfficialScroll(streamers) {
+  const section = document.getElementById('home-official-scroll-section');
+  const scroll = document.getElementById('home-official-scroll');
+  if (!section || !scroll) return;
+
+  // 只有兩個以上官方台才顯示這列
+  if (streamers.length < 2) {
+    section.style.display = 'none';
+    return;
+  }
+
+  const needsCopyright = window._currentLiveEvent &&
+    (window._currentLiveEvent['需要轉播權'] === true || window._currentLiveEvent['需要轉播權'] === 'TRUE');
+
+  scroll.innerHTML = streamers.map(s => {
+    const status = s._status || {};
+    const name = s['頻道名稱'] || s['Twitch ID'] || '';
+    const game = status['當前遊戲'] || s['主要遊戲'] || '';
+    const thumbUrl = status['縮圖 URL'] || '';
+    const avatarUrl = status['頭貼 URL'] || '';
+    const platform = status['平台'] || s['平台'] || '';
+    const twitchId = String(s['Twitch ID'] || '').trim();
+    const ytId = String(s['YouTube ID'] || '').trim();
+    let url = '#';
+    if (platform === 'Twitch' && twitchId) url = `https://www.twitch.tv/${twitchId}`;
+    else if (platform === 'YouTube' && ytId) url = `https://www.youtube.com/@${ytId}`;
+
+    // 依轉播權決定顯示縮圖或頭貼
+    const imgUrl = needsCopyright
       ? avatarUrl
       : (thumbUrl && thumbUrl !== '-' ? thumbUrl : avatarUrl);
 
