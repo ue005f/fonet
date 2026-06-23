@@ -3305,11 +3305,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ── 自動重新整理 ──
 
-  // 直播狀態：每 5 分鐘（跟 Apps Script 同步）
+  // 直播狀態：每 10 分鐘（跟 Apps Script 同步）
   setInterval(() => {
     loadHeroThenLive();
     updateLastUpdated();
-  }, 5 * 60 * 1000);
+  }, 10 * 60 * 1000);
 
   // 賽事資料：對準每小時的 X:10 和 X:40
   function scheduleEventRefresh() {
