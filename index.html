@@ -1225,13 +1225,7 @@
 
   <!-- ══════════════ HOME PAGE ══════════════ -->
   <div class="page active" id="page-home">
-    <header>
-      <div class="logo-wrap">
-        <div class="logo">623<span>Hub</span></div>
-        <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
-      </div>
-      <button class="icon-btn" onclick="openMenu()">⋯</button>
-    </header>
+    <header id="site-header-home"></header>
 
     <div class="content">
 
@@ -1318,37 +1312,12 @@
       <div class="spacer"></div>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="nav-item" data-page="live" onclick="showPage('live')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 19.07a10 10 0 0 1 0-14.14"/>
-        </svg>
-        直播
-      </button>
-      <button class="nav-item active" data-page="home" onclick="showPage('home')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        首頁
-      </button>
-      <button class="nav-item" data-page="events" onclick="showPage('events')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        賽事
-      </button>
-    </nav>
+    <nav class="bottom-nav" id="site-nav-home"></nav>
   </div>
 
   <!-- ══════════════ LIVE PAGE ══════════════ -->
   <div class="page" id="page-live">
-    <header>
-      <div class="logo-wrap">
-        <div class="logo">623<span>Hub</span></div>
-        <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
-      </div>
-      <button class="icon-btn" onclick="openMenu()">⋯</button>
-    </header>
+    <header id="site-header-live"></header>
 
     <div class="content">
       <div class="live-header">
@@ -1397,37 +1366,12 @@
       <div class="spacer"></div>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-page="live" onclick="showPage('live')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 19.07a10 10 0 0 1 0-14.14"/>
-        </svg>
-        直播
-      </button>
-      <button class="nav-item" data-page="home" onclick="showPage('home')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        首頁
-      </button>
-      <button class="nav-item" data-page="events" onclick="showPage('events')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        賽事
-      </button>
-    </nav>
+    <nav class="bottom-nav" id="site-nav-live"></nav>
   </div>
 
   <!-- ══════════════ EVENTS PAGE ══════════════ -->
   <div class="page" id="page-events">
-    <header>
-      <div class="logo-wrap">
-        <div class="logo">623<span>Hub</span></div>
-        <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
-      </div>
-      <button class="icon-btn" onclick="openMenu()">⋯</button>
-    </header>
+    <header id="site-header-events"></header>
 
     <div class="content">
 
@@ -1497,26 +1441,7 @@
       <div class="spacer"></div>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="nav-item" data-page="live" onclick="showPage('live')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 19.07a10 10 0 0 1 0-14.14"/>
-        </svg>
-        直播
-      </button>
-      <button class="nav-item" data-page="home" onclick="showPage('home')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        首頁
-      </button>
-      <button class="nav-item active" data-page="events" onclick="showPage('events')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        賽事
-      </button>
-    </nav>
+    <nav class="bottom-nav" id="site-nav-events"></nav>
   </div>
 
   <!-- Expand overlay -->
@@ -1968,7 +1893,7 @@ async function loadHero() {
             目前沒有觀賽派對
           </div>
           <div class="hero-cta">
-            ${evScheduleUrl ? `<a href="${evScheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+            ${evScheduleUrl ? `<a href="${evScheduleUrl}" target="_blank"><button class="btn-primary">賽事詳細 →</button></a>` : ''}
             <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
           </div>`;
       }
@@ -1993,7 +1918,7 @@ async function loadHero() {
             目前無官方轉播
           </div>
           <div class="hero-cta">
-            ${evScheduleUrl ? `<a href="${evScheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+            ${evScheduleUrl ? `<a href="${evScheduleUrl}" target="_blank"><button class="btn-primary">賽事詳細 →</button></a>` : ''}
             <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
           </div>`;
       }
@@ -2078,7 +2003,7 @@ function refreshHeroContent(liveEvent) {
       <div class="hero-event-name">${name}</div>
       <div class="hero-sub"><span class="hero-live-badge">LIVE</span> 目前沒有觀賽派對</div>
       <div class="hero-cta">
-        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽事詳細 →</button></a>` : ''}
         <button class="btn-ghost" onclick="showPage('live')">查看直播</button>
       </div>`;
   }
@@ -2089,7 +2014,7 @@ function refreshHeroContent(liveEvent) {
       <div class="hero-event-name">${name}（官方主台）</div>
       <div class="hero-sub"><span class="hero-live-badge">LIVE</span> 目前無官方轉播</div>
       <div class="hero-cta">
-        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽程表 →</button></a>` : ''}
+        ${scheduleUrl ? `<a href="${scheduleUrl}" target="_blank"><button class="btn-primary">賽事詳細 →</button></a>` : ''}
         <button class="btn-ghost" onclick="showPage('events')">查看賽事</button>
       </div>`;
   }
@@ -2194,6 +2119,56 @@ async function loadBanners() {
       if (el) el.style.display = 'none';
     });
   }
+}
+
+
+// ════════════════════════════════════════════
+// 共用 Header 和 Nav
+// ════════════════════════════════════════════
+const HEADER_HTML = `
+  <div class="logo-wrap">
+    <div class="logo">623<span>Hub</span></div>
+    <div class="logo-tagline">一站追蹤台灣格鬥遊戲賽事、直播資訊</div>
+  </div>
+  <button class="icon-btn" onclick="openMenu()">⋯</button>
+`;
+
+const NAV_ITEMS = [
+  {
+    page: 'live',
+    label: '實況',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 19.07a10 10 0 0 1 0-14.14"/></svg>`
+  },
+  {
+    page: 'home',
+    label: '首頁',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`
+  },
+  {
+    page: 'events',
+    label: '賽事',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`
+  }
+];
+
+function renderSharedUI() {
+  // 渲染所有 header
+  document.querySelectorAll('[id^="site-header-"]').forEach(el => {
+    el.innerHTML = HEADER_HTML;
+  });
+
+  // 渲染所有 nav（依頁面設定 active）
+  document.querySelectorAll('[id^="site-nav-"]').forEach(nav => {
+    const pageId = nav.id.replace('site-nav-', '');
+    nav.innerHTML = NAV_ITEMS.map(item => `
+      <button class="nav-item${item.page === pageId ? ' active' : ''}"
+        data-page="${item.page}"
+        onclick="showPage('${item.page}')">
+        ${item.icon}
+        ${item.label}
+      </button>
+    `).join('');
+  });
 }
 
 // ════════════════════════════════════════════
@@ -2393,7 +2368,7 @@ function renderEventCard(ev, isTwFiltered) {
         </div>` : '';
 
   const scheduleBtn = hasSchedule
-    ? `<a href="${hasSchedule}" target="_blank" onclick="event.stopPropagation()"><button class="btn-schedule">賽程表</button></a>`
+    ? `<a href="${hasSchedule}" target="_blank" onclick="event.stopPropagation()"><button class="btn-schedule">賽事詳細</button></a>`
     : '';
 
   return `
@@ -3293,6 +3268,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (contentEl && header) setupHeadroom(contentEl, header);
   });
   // 初始頁面
+  renderSharedUI();
   initPageFromHash();
   // 資料載入（順序重要）
   loadHomeEvents();
