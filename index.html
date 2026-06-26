@@ -7,6 +7,12 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>623Hub — 台灣格鬥遊戲賽事與直播資訊</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="623Hub">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root {
     --bg: #0B1020;
@@ -18,7 +24,7 @@
     --accent-dim2: rgba(168,85,247,0.06);
     --text: #FFFFFF;
     --text2: #A0A8C0;
-    --text3: #666A7A;
+    --text3: #a0a6bc;
     --live-red: #FF4444;
     --radius: 10px;
     --radius-sm: 6px;
@@ -97,8 +103,8 @@
   .logo span { color: var(--accent); }
   .logo-wrap { display: flex; flex-direction: column; line-height: 1.1; }
   .logo-tagline {
-    font-size: 11px;
-    color: var(--text2);
+    font-size: 13px;
+    color: var(--text1);
     letter-spacing: 0.01em;
     margin-top: 2px;
     white-space: nowrap;
@@ -237,7 +243,7 @@
     margin-top: 4px;
   }
   .event-desc {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text3);
     margin-top: 6px;
     width: 100%;
@@ -658,8 +664,8 @@
     margin: 24px 18px 8px;
     border-radius: var(--radius);
     overflow: hidden;
-    background: linear-gradient(135deg, #1C2236, #252d45);
-    border: 1px solid rgba(25,247,226,0.1);
+    background: linear-gradient(135deg, #252d45);
+    border: 1px solid rgba(168,85,247,0.3);
     padding: 16px 18px;
     display: flex;
     align-items: center;
@@ -668,10 +674,10 @@
   }
   .banner-text {
     font-size: 13px;
-    color: var(--text2);
+    color: #FFFFFF;
     line-height: 1.4;
   }
-  .banner-text strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
+  .banner-text strong { color: #FFFFFF; display: block; font-size: 14px; margin-bottom: 2px; font-weight: 700; }
   .banner-btn {
     padding: 7px 14px;
     background: transparent;
@@ -715,13 +721,13 @@
     justify-content: space-between;
     gap: 12px;
     padding: 16px 18px;
-    background: linear-gradient(135deg, #1C1A2E, #252040);
-    border: 1px solid rgba(168,85,247,0.1);
+    background: linear-gradient(135deg, #252040);
+    border: 1px solid rgba(168,85,247,0.8);
     border-radius: var(--radius);
   }
   .banner-slide-body {
     font-size: 13px;
-    color: var(--text2);
+    color: var(--text);
     line-height: 1.4;
   }
   .banner-slide-body strong {
@@ -1323,7 +1329,7 @@
       <div class="live-header">
         <div class="live-card-title">
           <div class="live-title-dot"></div>
-          LIVE
+          LIVE 實況中的格鬥遊戲頻道
         </div>
       </div>
 
@@ -1463,14 +1469,14 @@
 
         <div class="guide-section">
           <div class="guide-section-title">格鬥遊戲是什麼？</div>
-          <p>格鬥遊戲是兩名玩家操控角色一對一對戰的遊戲類型，強調反應速度、招式組合與心理博弈。常見作品有 Street Fighter（快打旋風）、Tekken（鐵拳）等，全球各地都有職業選手與比賽。</p>
+          <p>格鬥遊戲通常是兩名玩家操控角色對戰的遊戲類型，強調反應速度、招式組合與心理博弈。常見作品有 Street Fighter（快打旋風）、Tekken（鐵拳）等，全球各地都有職業選手與比賽。</p>
         </div>
 
         <div class="guide-section">
           <div class="guide-section-title">常見名詞</div>
           <div class="guide-term">
-            <strong>觀賽派對</strong>
-            <span>實況主一邊看比賽轉播、一邊跟觀眾聊天討論的直播形式，比單純看官方轉播更有互動感。</span>
+            <strong>共同觀賽</strong>
+            <span>通常稱 共同視聽/co-stream/watching party/觀賽派對，實況主一邊看比賽轉播、一邊跟觀眾聊天討論的直播形式，比單純看官方轉播更有互動感。</span>
           </div>
           <div class="guide-term">
             <strong>焦點大賽</strong>
@@ -1492,7 +1498,7 @@
 
         <div class="guide-section">
           <div class="guide-section-title">怎麼開始看比賽？</div>
-          <p>到「賽事」頁面看看最近有沒有進行中或即將到來的比賽，點賽程表可以查看詳細對戰時間。也可以到「直播」頁面，看看現在有誰正在開台。</p>
+          <p>到「賽事」頁面看看最近有沒有進行中或即將到來的比賽，點賽程表可以查看詳細對戰時間。也可以到「實況」頁面，看看現在有誰正在開台。</p>
         </div>
 
       </div>
@@ -1510,19 +1516,19 @@
         <span class="menu-item-icon">📖</span>
         網站說明
       </button>
-      <button class="menu-item">
+      <a href="https://forms.gle/yLvmLfM3ASG22W817" target="_blank"><button class="menu-item">
         <span class="menu-item-icon">💬</span>
         提供意見回饋
-      </button>
+      </button></a>
       <button class="menu-item" onclick="toggleAbout(this)">
         <span class="menu-item-icon">ℹ️</span>
         關於 623Hub
       </button>
       <div class="menu-about" id="menu-about">
         <p>網頁架構與 Claude 合作完成</p>
-        <p>資料多為人工收集，有任何錯誤還請見諒</p>
+        <p>資料多為人工收集或Ai文案，有任何錯誤還請見諒</p>
         <p>若內容造成您的困擾，請聯絡我們，我們將儘速為您處理</p>
-        <a href="#" class="menu-contact">✉ 聯絡我們</a>
+        <a href="mailto: zwjh2019@gmail.com" class="menu-contact" target="_blank">✉ 聯絡我們</a>
       </div>
     </div>
   </div>
@@ -2181,12 +2187,12 @@ const SHEETS_ID = '1MBU9FQYsPqEwSgdAjmfxzOETK8vmBPY_JeNkP6vNgCw';
 function isEventLive(ev, now) {
   now = now || new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 今天 00:00
-  const todayEnd = new Date(today.getTime() + 24*60*60*1000 - 1); // 今天 23:59:59
 
   const start = ev['開始日期'] instanceof Date ? ev['開始日期'] : (ev['開始日期'] ? new Date(ev['開始日期']) : null);
   const end = ev['結束日期'] instanceof Date ? ev['結束日期'] : (ev['結束日期'] ? new Date(ev['結束日期']) : null);
   const repeatType = (ev['重複類型'] || '').trim();
-  const repeatDays = (ev['重複星期'] || '').trim(); // 例如「四」「六,日」
+  const repeatDays = (ev['重複星期'] || '').trim();
+  const repeatTime = (ev['重複時間'] || '').trim(); // 例如「18:00」
 
   // 系列賽還沒開始或已結束 → 一律不算進行中
   if (start && today < new Date(start.getFullYear(), start.getMonth(), start.getDate())) return false;
@@ -2196,10 +2202,20 @@ function isEventLive(ev, now) {
   }
 
   if (repeatType === '固定星期' && repeatDays) {
-    // 比對今天是星期幾
     const dayMap = { '日':0, '一':1, '二':2, '三':3, '四':4, '五':5, '六':6 };
     const targetDays = repeatDays.split(/[,，、]/).map(d => dayMap[d.trim()]).filter(d => d !== undefined);
-    return targetDays.includes(today.getDay());
+    if (!targetDays.includes(today.getDay())) return false;
+
+    // 有設定開始時間，判斷現在是否已到開始時間
+    if (repeatTime) {
+      const parts = repeatTime.split(':');
+      const startHour = parseInt(parts[0]) || 0;
+      const startMin = parseInt(parts[1]) || 0;
+      const startDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour, startMin, 0);
+      const endDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      return now >= startDateTime && now <= endDateTime;
+    }
+    return true;
   }
 
   // 單次賽事：開始日期 ≤ 今天 ≤ 結束日期
@@ -3285,7 +3301,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(() => {
     loadHeroThenLive();
     updateLastUpdated();
-  }, 5 * 60 * 1000);
+  }, 10 * 60 * 1000);
 
   // 賽事資料：對準每小時的 X:10 和 X:40
   function scheduleEventRefresh() {
@@ -3322,7 +3338,15 @@ document.addEventListener('DOMContentLoaded', function() {
   updateLastUpdated();
 });
 
-// ── 最後更新時間 ──
+// ── PWA Service Worker 註冊 ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log('Service Worker 已註冊'))
+      .catch(e => console.log('Service Worker 註冊失敗:', e));
+  });
+}
+
 function updateLastUpdated() {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, '0');
