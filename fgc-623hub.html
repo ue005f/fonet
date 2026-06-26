@@ -677,11 +677,11 @@
     color: var(--text);
     line-height: 1.4;
   }
-  .banner-text strong { color: var(--accent); display: block; font-size: 14px; margin-bottom: 2px; }
+  .banner-text strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
   .banner-btn {
     padding: 7px 14px;
     background: transparent;
-    color: var(--text);
+    color: var(--accent);
     border: 1px solid var(--accent);
     border-radius: var(--radius-sm);
     font-size: 12px;
@@ -2062,13 +2062,13 @@ function renderBannerCarousel(containerId, slides) {
         <img class="banner-slide-img" src="${s['圖片網址']}" alt="${s['標題'] || ''}">
       </a>`;
     } else {
-      return `<a class="banner-slide ${isActive}" href="${href}" target="_blank" style="text-decoration:none;">
+      return `
         <div class="banner-slide-text">
           <div class="banner-text-content">
             <strong>${s['標題'] || ''}</strong>
             ${s['說明文字'] || ''}
           </div>
-          ${s['按鈕文字'] ? `<button class="banner-btn" onclick="event.preventDefault()">${s['按鈕文字']}</button>` : ''}
+          <a class="banner-slide ${isActive}" href="${href}" target="_blank" style="text-decoration:none;">${s['按鈕文字'] ? `<button class="banner-btn" onclick="event.preventDefault()">${s['按鈕文字']}</button>` : ''}
         </div>
       </a>`;
     }
