@@ -2058,19 +2058,23 @@ function renderBannerCarousel(containerId, slides) {
     const hasImg = s['圖片網址'] && s['圖片網址'].startsWith('http');
 
     if (hasImg) {
-      return `<a class="banner-slide ${isActive}" href="${href}" target="_blank">
-        <img class="banner-slide-img" src="${s['圖片網址']}" alt="${s['標題'] || ''}">
-      </a>`;
-    } else {
-      return `
-        <div class="banner-slide-text">
-          <div class="banner-text-content">
-            <strong>${s['標題'] || ''}</strong>
-            ${s['說明文字'] || ''}
-          </div>
-          <a class="banner-slide ${isActive}" href="${href}" target="_blank" style="text-decoration:none;">${s['按鈕文字'] ? `<button class="banner-btn" onclick="event.preventDefault()">${s['按鈕文字']}</button>` : ''}
-        </div>
-      </a>`;
+      return `<div class="banner-slide ${isActive}">
+  <div class="banner-slide-text">
+
+    <div class="banner-text-content">
+      <strong>${s['標題'] || ''}</strong>
+      ${s['說明文字'] || ''}
+    </div>
+
+    ${s['按鈕文字']
+      ? `<a href="${href}" target="_blank" class="banner-btn">
+           ${s['按鈕文字']}
+         </a>`
+      : ''
+    }
+
+  </div>
+</div>`;
     }
   }).join('');
 
