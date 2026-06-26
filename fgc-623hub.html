@@ -2058,6 +2058,10 @@ function renderBannerCarousel(containerId, slides) {
     const hasImg = s['圖片網址'] && s['圖片網址'].startsWith('http');
 
     if (hasImg) {
+      return `<a class="banner-slide ${isActive}" href="${href}" target="_blank">
+        <img class="banner-slide-img" src="${s['圖片網址']}" alt="${s['標題'] || ''}">
+      </a>`;
+    } else {
       return `<div class="banner-slide ${isActive}">
   <div class="banner-slide-text">
 
